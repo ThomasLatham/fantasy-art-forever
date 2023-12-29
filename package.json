@@ -14,6 +14,7 @@
     "@prisma/client": "^5.7.1",
     "instagram-private-api": "^1.45.3",
     "next": "14.0.4",
+    "raw-loader": "^4.0.2",
     "re2": "^1.20.9",
     "react": "^18",
     "react-dom": "^18",
