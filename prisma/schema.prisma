@@ -10,10 +10,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// An item in the queue for posting to Instagram. Queue is implemented so that the application can
+/// have one cronjob for scraping Reddit and another for posting to Instagram. 
+/// The reason for this is twofold: 
+/// 1.) We don't want go over the time limit for a Vercel serverless function on the hobby plan (10
+/// seconds). 
+/// 2.) We want to have backup Reddit posts in case something goes wrong during scraping, for the
+/// sake of high availability for our application.
 model QueuedInstagramPost {
-  id             String @id @default(cuid())
-  redditPostUrl  String
-  redditPoster   String
-  attributionUrl String
-  artistName     String
+  id             String @id @default(cuid()) /// Uniquely identifies a queue item.
+  redditPostUrl  String /// The URL of the post from Reddit (in the INE).
+  redditPoster   String /// The Reddit username of the user who created the post.
+  attributionUrl String /// A URL for giving attribution to the original artist of the work that was posted.
+  artistName     String /// The name of the artist who created the artwork.
+}
+
+/// A day in the posting schedule. There are seven `PostingScheduleDay`s, one for each day of the
+/// week.
+model PostingScheduleDay {
+  id          Int    @unique /// Corresponds to the weekday index: Sunday is 0, Monday is 1, etc.
+  nickname    String /// The nickname for the posting day (e.g., "Magic Monday" or "Techno Tuesday").
+  description String /// The description of the theme for the posting day.
+
+  /// A single string holding a comma-space-separated list of the subreddits sourced for posting on
+  /// this day. The names of the subreddits are shortened, omitting the convention of subreddits
+  /// from the INE (e.g., "/r/ImaginaryBattlefields" is in the list as "Battlefields".) So in this
+  /// way, this field might have the value "Winterscapes, Springscapes, Summerscapes, Autumnscapes".
+  subreddits String
+
+  /// If true, then the `subreddits` are cycled through for sourcing purposes. Otherwise, one
+  /// subreddit is chosen each week at random.
+  isCyclicalRotation Boolean
+
+  /// The 0-based index in the `subreddits` list of the most recently sourced subreddit for posting
+  /// purposes. Used for helping to determine the next subreddit to source from the `subreddits`
+  /// field. 
+  /// In the case that `isCyclicalRotation` is `true`, then we simply use the next index for
+  /// sourcing.
+  /// In the case that `isCyclicalRotation` is `false`, then we randomly select a subreddit from the
+  /// list that is *not* the `lastSourcedSubreddit` so to avoid sourcing from the same subreddit two
+  /// weeks in a row.
+  lastSourcedSubreddit Int
 }
