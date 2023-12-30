@@ -2,21 +2,12 @@ import dotenv from "dotenv";
 import { PostingScheduleDay } from "@prisma/client";
 import snoowrap from "snoowrap";
 
+import "../snoowrapFix";
 import prisma, {
   getAllSubredditDisplayNames,
   pushToQueue,
 } from "../src/utils/database";
 import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
-
-// comment out the module declaration below before deploying
-
-// declare module "snoowrap" {
-//   class RedditContent<T> {
-//     then: undefined;
-//     catch: undefined;
-//     finally: undefined;
-//   }
-// }
 
 /**
  * Put your database operations that you want to execute in this function.
@@ -25,9 +16,8 @@ import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
 const describeDatabaseOperations = async () => {
   // await prisma.postingScheduleDay.deleteMany();
   // await initPostingScheduleDays();
-
-  await prisma.queuedInstagramPost.deleteMany();
-  await initQueuedInstagramPosts();
+  // await prisma.queuedInstagramPost.deleteMany();
+  // await initQueuedInstagramPosts();
 };
 
 /* ********************
@@ -45,7 +35,7 @@ const initPostingScheduleDays = async () => {
       nickname: "Seasonal Sunday",
       description:
         "Art depicting one of the four seasons, on a rotating basis.",
-      subreddits:
+      subredditDisplayNames:
         "ImaginaryWinterscapes, ImaginarySpringscapes, ImaginarySummerscapes, ImaginaryAutumnscapes",
       isCyclicalRotation: true,
       lastSourcedSubreddit: 0,
@@ -55,7 +45,7 @@ const initPostingScheduleDays = async () => {
       nickname: "Magic Monday",
       description:
         "Art with magical and high-fantasy themes: wizards, witches, elves, dragons and such.",
-      subreddits:
+      subredditDisplayNames:
         "ImaginaryWitches, ImaginaryWizards, ImaginaryDwarves, ImaginaryElves, ImaginaryDragons",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
@@ -64,7 +54,7 @@ const initPostingScheduleDays = async () => {
       id: 2,
       nickname: "Techno Tueday",
       description: "Artistic works with steampunk and cyberpunk themes.",
-      subreddits:
+      subredditDisplayNames:
         "ImaginaryCybernetics, ImaginaryCyberpunk, ImaginarySteampunk, ImaginaryMechs, ImaginaryStarships",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
@@ -74,7 +64,7 @@ const initPostingScheduleDays = async () => {
       nickname: "Warrior Wednesday",
       description:
         "Art of all kinds of fantasy warriors, from sneaky assassins to battered brawlers.",
-      subreddits:
+      subredditDisplayNames:
         "ImaginaryBattlefields, ImaginaryArchers, ImaginaryAssassins, ImaginaryKnights, ImaginarySoldiers, ImaginaryWarriors",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
@@ -84,7 +74,7 @@ const initPostingScheduleDays = async () => {
       nickname: "Alliteration-Is-Hard Thursday",
       description:
         'I couldn\'t think of a good "th"-word, so today we just have some random themes: angels, demons, scholars, merfolk and more.',
-      subreddits:
+      subredditDisplayNames:
         "ImaginaryAngels, ImaginaryOrcs, ImaginaryScholars, ImaginaryMythology, ImaginaryNobles, ImaginaryElementals, ImaginaryUndead, ImaginaryDemons, ImaginaryFaeries, ImaginaryMerfolk, ImaginaryHumans",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
@@ -94,7 +84,7 @@ const initPostingScheduleDays = async () => {
       nickname: "Fandom Friday",
       description:
         "Fantasy art from some cool established universes (Warcraft, Middle Earth, Elder Scrolls and The Witcher), on a rotating schedule.",
-      subreddits:
+      subredditDisplayNames:
         "ImaginaryAzeroth, ImaginaryMiddleEarth, ImaginaryTamriel, ImaginaryWitcher",
       isCyclicalRotation: true,
       lastSourcedSubreddit: 0,
@@ -104,7 +94,7 @@ const initPostingScheduleDays = async () => {
       nickname: "Scenic Saturday",
       description:
         "Art of beautiful places, from majestic landscapes to towering castles.",
-      subreddits:
+      subredditDisplayNames:
         "ImaginaryArchitecture, ImaginaryCastles, ImaginaryDwellings, ImaginaryPathways, ImaginarySeascapes, ImaginaryWildlands, ImaginaryWorlds",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,

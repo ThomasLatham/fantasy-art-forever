@@ -71,7 +71,7 @@ const generatePostingTime = () => {
 const getAllSubredditDisplayNames = async () => {
   return (await prisma.postingScheduleDay.findMany())
     .map((postingScheduleDay) => {
-      return postingScheduleDay.subreddits.split(", ");
+      return postingScheduleDay.subredditDisplayNames.split(", ");
     })
     .reduce((prev, cur) => {
       return prev.concat(...cur);
