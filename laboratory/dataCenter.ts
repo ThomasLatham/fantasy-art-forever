@@ -8,13 +8,15 @@ import prisma, {
 } from "../src/utils/database";
 import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
 
-declare module "snoowrap" {
-  class RedditContent<T> {
-    then: undefined;
-    catch: undefined;
-    finally: undefined;
-  }
-}
+// comment out the module declaration below before deploying
+
+// declare module "snoowrap" {
+//   class RedditContent<T> {
+//     then: undefined;
+//     catch: undefined;
+//     finally: undefined;
+//   }
+// }
 
 /**
  * Put your database operations that you want to execute in this function.
