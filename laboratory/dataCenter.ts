@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
+dotenv.config({ path: "./.env.local" });
 import { PostingScheduleDay } from "@prisma/client";
+import * as fs from "fs";
 
 import snoo from "../src/utils/reddit";
 import "../snoowrapFix";
@@ -16,8 +18,10 @@ import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
 const describeDatabaseOperations = async () => {
   // await prisma.postingScheduleDay.deleteMany();
   // await initPostingScheduleDays();
-  // await prisma.queuedInstagramPost.deleteMany();
-  // await initQueuedInstagramPosts();
+  await prisma.queuedInstagramPost.deleteMany();
+  await initQueuedInstagramPosts();
+
+  // await getLotsOfINEPostTitles();
 };
 
 //#region TABLE INITIALIZERS
@@ -116,7 +120,7 @@ const initQueuedInstagramPosts = async () => {
   for (const subredditDisplayName of await getAllSubredditDisplayNames()) {
     const posts = await snoo
       .getSubreddit(subredditDisplayName)
-      .getTop({ time: "all", limit: 6 });
+      .getTop({ time: "all", limit: 10 });
     for (const post of posts) {
       try {
         console.log(
@@ -136,15 +140,36 @@ const initQueuedInstagramPosts = async () => {
 
 //#endregion
 
+//#region AD-HOC DATA RETRIEVAL
+
+const getLotsOfINEPostTitles = async () => {
+  const csvData: string[][] = [
+    ["subreddit", "post_title", "artwork_title", "artist_name"],
+  ];
+
+  for (const subreddit of await getAllSubredditDisplayNames()) {
+    try {
+      const topPosts = await snoo
+        .getSubreddit(subreddit)
+        .getTop({ time: "all", limit: 10 });
+      topPosts.forEach((post) => {
+        csvData.push([subreddit, post.title, "", ""]);
+      });
+    } catch (err) {
+      console.error(`Error fetching posts from ${subreddit}: ${err}`);
+    }
+  }
+
+  const csvContent = csvData.map((row) => row.join(",")).join("\n");
+  fs.writeFileSync("ine_post_titles.csv", csvContent, "utf8");
+};
+
+//#endregion
+
 //#region INTERNALS (no touchy)
 
 const executeDatabaseOperations = async (): Promise<void> => {
-  initializeEnvironment();
   await describeDatabaseOperations();
-};
-
-const initializeEnvironment = () => {
-  dotenv.config({ path: "./.env.local" });
 };
 
 //#endregion

@@ -1,7 +1,7 @@
 import snoowrap from "snoowrap";
 
 import { INEPostInfo } from "../../constants";
-import { wait } from "../general";
+import { removeTrailingComma } from "../general";
 
 //#region SNOOWRAP SINGLETON
 
@@ -38,6 +38,46 @@ const getPostUrlFromSubmission = (submission: snoowrap.Submission) => {
   return `https://www.reddit.com/${submission.subreddit_name_prefixed}/comments/${submission.id}/`;
 };
 
+/**
+ * Extracts artwork title and artist name from a given post title.
+ * @param {string} postTitle - The title of the Reddit post containing artwork and artist information.
+ * @returns {{ artworkTitle: string, artistName: string }} - Object containing artwork title and artist name.
+ * @throws {Error} - Throws an error if the artist name or artwork title cannot be found.
+ */
+const getArtworkDetails = (
+  postTitle: string
+): { artworkTitle: string; artistName: string } => {
+  const patterns = [
+    /"([^"]+)"(?:\s*-\s*|\s*by\s*)(.+)/i, // "<piece>" - <artist> or "<piece>" by <artist>
+    /'([^']+)'(?:\s*-\s*|\s*by\s*)(.+)/i, // '<piece>' - <artist> or '<piece>' by <artist>
+    /([^"'\-]+)(?:\s*-\s*|\s*by\s*)(.+)/i, // <piece> - <artist> or <piece> by <artist>
+  ];
+
+  let artworkTitle: string | null = null;
+  let artistName: string | null = null;
+
+  // Try each pattern to extract the art piece name and artist name
+  patterns.some((pattern) => {
+    const match = postTitle.match(pattern);
+    if (match && match.length >= 3) {
+      artworkTitle = match[1].trim();
+      artistName = match[2].trim();
+      return true;
+    }
+    return false;
+  });
+
+  if (!artistName || !artworkTitle) {
+    throw new Error(
+      "Unable to extract artist name or art piece name from the post title."
+    );
+  }
+
+  artworkTitle = removeTrailingComma(artworkTitle);
+
+  return { artworkTitle, artistName };
+};
+
 //#endregion
 
 //#region API OPS
@@ -48,46 +88,18 @@ const getINEPostInfo = async (
   try {
     // Fetch the post details using the provided link
     const post = await snoo.getSubmission(submission.id).fetch();
-    await wait(1000); // Wait for a second
-
-    // Check if the post is tagged as OC (Original Content)
-    if (post.link_flair_text && post.link_flair_text.toLowerCase() === "oc") {
-      throw new Error("This post is tagged as Original Content. Ignoring...");
-    }
 
     // Extract information from the post title with various patterns
-    const title = post.title;
-    const patterns = [
-      /"([^"]+)"(?:\s*-\s*|\s*by\s*)(.+)/i, // "<piece>" - <artist> or "<piece>" by <artist>
-      /'([^']+)'(?:\s*-\s*|\s*by\s*)(.+)/i, // '<piece>' - <artist> or '<piece>' by <artist>
-      /([^"'\-]+)(?:\s*-\s*|\s*by\s*)(.+)/i, // <piece> - <artist> or <piece> by <artist>
-    ];
+    let { artworkTitle, artistName } = getArtworkDetails(post.title);
 
-    let artworkTitle: string | null = null;
-    let artistName: string | null = null;
-
-    // Try each pattern to extract the art piece name and artist name
-    patterns.some((pattern) => {
-      const match = title.match(pattern);
-      if (match && match.length >= 3) {
-        artworkTitle = match[1].trim();
-        artistName = match[2].trim();
-        return true;
-      }
-      return false;
-    });
-
-    if (!artistName || !artworkTitle) {
-      throw new Error(
-        "Unable to extract artist name or art piece name from the post title."
-      );
+    if (isPostOC(post.link_flair_text, artistName)) {
+      artistName = "u/" + post.author.name;
     }
 
     const redditOP = post.author.name;
 
     // Find the oldest comment by the redditOP that contains a link (assuming the link is in the comment body)
     const comments = await post.comments.fetchAll();
-    await wait(1000); // Wait for a second
 
     const oldestComment = comments
       .filter((comment) => comment.author.name === redditOP)
@@ -118,6 +130,14 @@ const getINEPostInfo = async (
       `Error fetching post information: ${(error as any).message}`
     );
   }
+};
+
+const isPostOC = (postLinkFlairText: string | null, artistName: string) => {
+  return (
+    postLinkFlairText?.toLocaleLowerCase() === "oc" ||
+    artistName.toLowerCase() == "me" ||
+    artistName.toLowerCase() == "myself"
+  );
 };
 
 //#endregion

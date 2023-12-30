@@ -4,11 +4,10 @@ from the [Imaginary Network Expanded](https://old.reddit.com/r/ImaginaryBestOf/w
 a family of Reddit communities (i.e., subreddits) for sharing and discussing art while maintaining
 artist credit. As such, this project also keeps high standards for artist and poster attribution.
 
-*A note for transparency:* This bot in its current state ignores OC (original content) posts on the
-subreddits it scrapes. This is because it's difficult to automate attribution for these posts; while
-regular posts need to have artist's name in their titles, OC posts don't have this requirement, so
-it's harder (but not impossible) to automate finding the artist's name. I might add this in a future
-version.
+*A note for transparency:* As an automated bot, this project doesn't always parse the scraped data
+in such a way as to give proper attribution (e.g., the occasional messed-up post title or artist
+name), and I apologize for this. Further, in the case of OC (original content) posts to the sourced
+subreddits, the bot attributes the work on Instagram using the OP's (original poster's) Reddit username.
 
 ## Posting Schedule
 
