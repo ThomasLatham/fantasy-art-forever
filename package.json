@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "dotenv -e .env.local npx prisma migrate dev",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "tryit": "nodemon laboratory/experimentationRoom/centrifuge.ts",
+    "dataops": "nodemon laboratory/dataCenter.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
@@ -30,6 +32,7 @@
     "dotenv": "^16.3.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
+    "eslint-plugin-import": "^2.29.1",
     "postcss": "^8",
     "prisma": "^5.7.1",
     "tailwindcss": "^3.3.0",

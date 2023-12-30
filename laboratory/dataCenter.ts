@@ -1,13 +1,24 @@
 import dotenv from "dotenv";
+import { PostingScheduleDay } from "@prisma/client";
+import snoowrap from "snoowrap";
 
 import prisma from "../src/utils/database";
-import { PostingScheduleDay } from "@prisma/client";
 
-const describeDatabaseOperations = async () => {
-  // await setUpPostingScheduleDays();
-};
+/**
+ * Put your database operations that you want to execute in this function.
+ * Then in the terminal run `nodemod laboratory/dataCenter.ts` to execute them.
+ */
+const describeDatabaseOperations = async () => {};
 
-const setUpPostingScheduleDays = async () => {
+/* ********************
+ * TABLE INITIALIZERS *
+ * ****************** */
+
+/**
+ * Fills the `PostingScheduleDay` table with initial data. Reflects the information in the README
+ * concerning the posting schedule.
+ */
+const initPostingScheduleDays = async () => {
   const postingScheduleDays: PostingScheduleDay[] = [
     {
       id: 0,
@@ -40,7 +51,8 @@ const setUpPostingScheduleDays = async () => {
       nickname: "Warrior Wednesday",
       description:
         "Art of all kinds of fantasy warriors, from sneaky assassins to battered brawlers.",
-      subreddits: "Battlefields, Archers, Assassins, Knights, Soldiers, Warriors",
+      subreddits:
+        "Battlefields, Archers, Assassins, Knights, Soldiers, Warriors",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -49,7 +61,8 @@ const setUpPostingScheduleDays = async () => {
       nickname: "Alliteration-Is-Hard Thursday",
       description:
         'I couldn\'t think of a good "th"-word, so today we just have some random themes: angels, demons, scholars, merfolk and more.',
-      subreddits: "Angels, Orcs, Scholars, Mythology, Nobles, Elementals, Undead, Demons, Faeries, Merfolk, Humans",
+      subreddits:
+        "Angels, Orcs, Scholars, Mythology, Nobles, Elementals, Undead, Demons, Faeries, Merfolk, Humans",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -67,7 +80,8 @@ const setUpPostingScheduleDays = async () => {
       nickname: "Scenic Saturday",
       description:
         "Art of beautiful places, from majestic landscapes to towering castles.",
-      subreddits: "Architecture, Castles, Dwellings, Pathways, Seascapes, Wildlands, Worlds",
+      subreddits:
+        "Architecture, Castles, Dwellings, Pathways, Seascapes, Wildlands, Worlds",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -79,6 +93,27 @@ const setUpPostingScheduleDays = async () => {
     })
   );
 };
+
+/**
+ * Fills the `QueuedInstagramPost` table with initial data.
+ *
+ * We want 1 queued post and 2 backup posts for *every* subreddit from which we source, and
+ * we'll initialize the data using the top 3 posts of all time for each subreddit.
+ */
+const initQueuedInstagramPosts = async () => {
+  // get all the subreddits from the DB
+  const r = new snoowrap({
+    userAgent: process.env.REDDIT_USER_AGENT,
+    clientId: process.env.REDDIT_CLIENT_ID,
+    clientSecret: process.env.REDDIT_CLIENT_SERCET,
+    username: process.env.REDDIT_USERNAME,
+    password: process.env.REDDIT_PASSWORD,
+  });
+};
+
+/* **********************
+ * INTERNALS (no touchy) *
+ * ********************* */
 
 const executeDatabaseOperations = async (): Promise<void> => {
   initializeEnvironment();

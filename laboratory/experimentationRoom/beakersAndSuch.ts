@@ -2,8 +2,8 @@ import * as fs from "fs";
 
 import { getLocalVariableValue } from "./utilityCloset";
 
-const executeNewPostNotificationFlow = async (newPostId: string) => {
-  console.log("placeholder");
+const shortenSubredditName = (subredditName: string) => {
+  return subredditName.split("Imaginary").slice(-1)[0];
 };
 
 /* *** *** *** *** *** *** *** *** *** *** *** *** *
@@ -11,7 +11,7 @@ const executeNewPostNotificationFlow = async (newPostId: string) => {
  * *** *** *** *** *** *** *** *** *** *** *** *** */
 
 const putTestTubeInCentrifuge = async () => {
-  await executeNewPostNotificationFlow("test-post");
+  console.log(shortenSubredditName("r/ImaginaryWildlands"));
 };
 
 export default putTestTubeInCentrifuge;

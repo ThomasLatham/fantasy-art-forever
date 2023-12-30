@@ -36,7 +36,7 @@ while IFS= read -r line; do
       # Trim leading and trailing spaces from the name
       trimmed_name="${name// /}"
       # Construct the formatted string and append it to the result
-      result+="[/r/Imaginary${trimmed_name}](https://www.reddit.com/r/Imaginary${trimmed_name}), "
+      result+="[r/Imaginary${trimmed_name}](https://www.reddit.com/r/Imaginary${trimmed_name}), "
     done
     # Append a newline after processing each "subreddits: " line
     result+="\n"
