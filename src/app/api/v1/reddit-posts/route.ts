@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
-import snoowrap from "snoowrap";
+
+import snoo from "../../../../utils/reddit";
 
 /**
  * This script is designed to run every 6 hours (4 times a day). We want to always have 2 backup
@@ -16,27 +17,7 @@ const GET = (request: NextRequest) => {
     });
   }
 
-  // get a post from Reddit
-  if (
-    !(
-      process.env.REDDIT_USER_AGENT &&
-      process.env.REDDIT_CLIENT_ID &&
-      process.env.REDDIT_CLIENT_SECRET &&
-      process.env.REDDIT_USERNAME &&
-      process.env.REDDIT_PASSWORD
-    )
-  ) {
-    return new Response("Internal Server Error", {
-      status: 500,
-    });
-  }
-  const r = new snoowrap({
-    userAgent: process.env.REDDIT_USER_AGENT,
-    clientId: process.env.REDDIT_CLIENT_ID,
-    clientSecret: process.env.REDDIT_CLIENT_SECRET,
-    username: process.env.REDDIT_USERNAME,
-    password: process.env.REDDIT_PASSWORD,
-  });
+  // get a post from reddit
 
   // add it to the DB
 

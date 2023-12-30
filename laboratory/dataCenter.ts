@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { PostingScheduleDay } from "@prisma/client";
-import snoowrap from "snoowrap";
 
+import snoo from "../src/utils/reddit";
 import "../snoowrapFix";
 import prisma, {
   getAllSubredditDisplayNames,
@@ -20,9 +20,7 @@ const describeDatabaseOperations = async () => {
   // await initQueuedInstagramPosts();
 };
 
-/* ********************
- * TABLE INITIALIZERS *
- * ****************** */
+//#region TABLE INITIALIZERS
 
 /**
  * Fills the `PostingScheduleDay` table with initial data. Reflects the information in the README
@@ -115,16 +113,8 @@ const initPostingScheduleDays = async () => {
  * we'll initialize the data using the top 3 posts of all time for each subreddit.
  */
 const initQueuedInstagramPosts = async () => {
-  const r = new snoowrap({
-    userAgent: process.env.REDDIT_USER_AGENT,
-    clientId: process.env.REDDIT_CLIENT_ID,
-    clientSecret: process.env.REDDIT_CLIENT_SECRET,
-    username: process.env.REDDIT_USERNAME,
-    password: process.env.REDDIT_PASSWORD,
-  });
-
   for (const subredditDisplayName of await getAllSubredditDisplayNames()) {
-    const posts = await r
+    const posts = await snoo
       .getSubreddit(subredditDisplayName)
       .getTop({ time: "all", limit: 6 });
     for (const post of posts) {
@@ -134,7 +124,7 @@ const initQueuedInstagramPosts = async () => {
             getPostUrlFromSubmission(post) +
             " into DB..."
         );
-        await pushToQueue(await getINEPostInfo(post, r));
+        await pushToQueue(await getINEPostInfo(post));
         console.log("Attempt success.");
       } catch (error) {
         console.log("Error: " + (error as any).message);
@@ -144,9 +134,9 @@ const initQueuedInstagramPosts = async () => {
   }
 };
 
-/* **********************
- * INTERNALS (no touchy) *
- * ********************* */
+//#endregion
+
+//#region INTERNALS (no touchy)
 
 const executeDatabaseOperations = async (): Promise<void> => {
   initializeEnvironment();
@@ -156,5 +146,7 @@ const executeDatabaseOperations = async (): Promise<void> => {
 const initializeEnvironment = () => {
   dotenv.config({ path: "./.env.local" });
 };
+
+//#endregion
 
 executeDatabaseOperations();

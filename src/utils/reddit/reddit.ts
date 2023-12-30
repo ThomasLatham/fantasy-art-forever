@@ -3,21 +3,51 @@ import snoowrap from "snoowrap";
 import { INEPostInfo } from "../../constants";
 import { wait } from "../general";
 
-/* FORMATTING */
+//#region SNOOWRAP SINGLETON
+
+const snoowrapSingleton = () => {
+  if (
+    !(
+      process.env.REDDIT_USER_AGENT &&
+      process.env.REDDIT_CLIENT_ID &&
+      process.env.REDDIT_CLIENT_SECRET &&
+      process.env.REDDIT_USERNAME &&
+      process.env.REDDIT_PASSWORD
+    )
+  ) {
+    throw new Error("Could not get snoowrap.");
+  }
+  return new snoowrap({
+    userAgent: process.env.REDDIT_USER_AGENT,
+    clientId: process.env.REDDIT_CLIENT_ID,
+    clientSecret: process.env.REDDIT_CLIENT_SECRET,
+    username: process.env.REDDIT_USERNAME,
+    password: process.env.REDDIT_PASSWORD,
+  });
+};
+declare global {
+  var snoo: undefined | ReturnType<typeof snoowrapSingleton>;
+}
+const snoo = globalThis.snoo ?? snoowrapSingleton();
+
+//#endregion
+
+//#region FORMATTING
 
 const getPostUrlFromSubmission = (submission: snoowrap.Submission) => {
   return `https://www.reddit.com/${submission.subreddit_name_prefixed}/comments/${submission.id}/`;
 };
 
-/* API OPS */
+//#endregion
+
+//#region API OPS
 
 const getINEPostInfo = async (
-  submission: snoowrap.Submission,
-  r: snoowrap
+  submission: snoowrap.Submission
 ): Promise<INEPostInfo> => {
   try {
     // Fetch the post details using the provided link
-    const post = await r.getSubmission(submission.id).fetch();
+    const post = await snoo.getSubmission(submission.id).fetch();
     await wait(1000); // Wait for a second
 
     // Check if the post is tagged as OC (Original Content)
@@ -90,4 +120,7 @@ const getINEPostInfo = async (
   }
 };
 
+//#endregion
+
 export { getPostUrlFromSubmission, getINEPostInfo };
+export default snoo;

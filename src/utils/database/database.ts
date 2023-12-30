@@ -2,20 +2,19 @@ import { PrismaClient } from "@prisma/client";
 
 import { INEPostInfo } from "../../constants";
 
-/* PRISMA SINGLETON */
+//#region PRISMA SINGLETON
 
 const prismaClientSingleton = () => {
   return new PrismaClient();
 };
-
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
-
 const prisma = globalThis.prisma ?? prismaClientSingleton();
 
-/* CREATE */
+//#endregion
+
+//#region CREATE
 
 const pushToQueue = async (postInfo: INEPostInfo) => {
   // see how many posts are in the queue from the same subreddit
@@ -62,7 +61,9 @@ const generatePostingTime = () => {
   return values[randomIndex];
 };
 
-/* READ */
+//#endregion
+
+//#region READ
 
 /**
  * Returns the display names of all the subreddits in the database (e.g., "ImaginaryWizards",
@@ -84,7 +85,9 @@ const getQueueItemsBySubreddit = async (subredditDisplayName: string) => {
   });
 };
 
-/* UPDATE */
+//#endregion
+
+//#region UPDATE
 
 /**
  * Sets to `false` the `isBackup` value of the `QueuedInstagramPost` identified by the given
@@ -96,6 +99,8 @@ const queueUpBackupItem = async (queueItemId: string) => {
     data: { isBackup: false },
   });
 };
+
+//#endregion
 
 export { getAllSubredditDisplayNames, pushToQueue };
 export default prisma;
