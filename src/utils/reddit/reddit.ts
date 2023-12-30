@@ -1,14 +1,24 @@
 import snoowrap from "snoowrap";
 
-import { INEPostInfo } from "@/contants";
+import { INEPostInfo } from "../../constants";
+import { wait } from "../general";
+
+/* FORMATTING */
+
+const getPostUrlFromSubmission = (submission: snoowrap.Submission) => {
+  return `https://www.reddit.com/${submission.subreddit_name_prefixed}/comments/${submission.id}/`;
+};
+
+/* API OPS */
 
 const getINEPostInfo = async (
-  postLink: string,
+  submission: snoowrap.Submission,
   r: snoowrap
 ): Promise<INEPostInfo> => {
   try {
     // Fetch the post details using the provided link
-    const post = await r.getSubmission(postLink).fetch();
+    const post = await r.getSubmission(submission.id).fetch();
+    await wait(1000); // Wait for a second
 
     // Check if the post is tagged as OC (Original Content)
     if (post.link_flair_text && post.link_flair_text.toLowerCase() === "oc") {
@@ -47,16 +57,14 @@ const getINEPostInfo = async (
 
     // Find the oldest comment by the redditOP that contains a link (assuming the link is in the comment body)
     const comments = await post.comments.fetchAll();
+    await wait(1000); // Wait for a second
+
     const oldestComment = comments
-      .filter(
-        (comment) =>
-          comment.author.name === redditOP &&
-          comment.created_utc < post.created_utc
-      )
+      .filter((comment) => comment.author.name === redditOP)
       .sort((a, b) => a.created_utc - b.created_utc)[0];
 
     const linkToArtworkSource = oldestComment
-      ? oldestComment.body.match(/\bhttps?:\/\/\S+/gi)?.[0] || null
+      ? oldestComment.body_html.match(/\bhttps?:\/\/\S+/gi)?.[0] || null
       : null;
 
     if (!linkToArtworkSource) {
@@ -65,6 +73,11 @@ const getINEPostInfo = async (
 
     // Return the collected information as an object
     return {
+      redditPostId: submission.id,
+      subredditDisplayName: submission.subreddit_name_prefixed.replace(
+        "r/",
+        ""
+      ),
       redditOP: redditOP,
       artworkTitle: artworkTitle,
       artistName: artistName,
@@ -76,3 +89,5 @@ const getINEPostInfo = async (
     );
   }
 };
+
+export { getPostUrlFromSubmission, getINEPostInfo };

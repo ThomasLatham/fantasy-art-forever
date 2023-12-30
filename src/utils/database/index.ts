@@ -1,4 +1,4 @@
-import prisma, { getAllSubredditUrls } from "./database";
+import prisma, { getAllSubredditDisplayNames, pushToQueue } from "./database";
 
-export { getAllSubredditUrls };
+export { getAllSubredditDisplayNames, pushToQueue };
 export default prisma;

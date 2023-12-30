@@ -1,4 +1,6 @@
 interface INEPostInfo {
+  redditPostId: string;
+  subredditDisplayName: string;
   redditOP: string;
   artworkTitle: string;
   artistName: string;

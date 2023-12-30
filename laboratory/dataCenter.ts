@@ -2,13 +2,31 @@ import dotenv from "dotenv";
 import { PostingScheduleDay } from "@prisma/client";
 import snoowrap from "snoowrap";
 
-import prisma from "../src/utils/database";
+import prisma, {
+  getAllSubredditDisplayNames,
+  pushToQueue,
+} from "../src/utils/database";
+import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
+
+declare module "snoowrap" {
+  class RedditContent<T> {
+    then: undefined;
+    catch: undefined;
+    finally: undefined;
+  }
+}
 
 /**
  * Put your database operations that you want to execute in this function.
  * Then in the terminal run `nodemod laboratory/dataCenter.ts` to execute them.
  */
-const describeDatabaseOperations = async () => {};
+const describeDatabaseOperations = async () => {
+  // await prisma.postingScheduleDay.deleteMany();
+  // await initPostingScheduleDays();
+
+  await prisma.queuedInstagramPost.deleteMany();
+  await initQueuedInstagramPosts();
+};
 
 /* ********************
  * TABLE INITIALIZERS *
@@ -25,7 +43,8 @@ const initPostingScheduleDays = async () => {
       nickname: "Seasonal Sunday",
       description:
         "Art depicting one of the four seasons, on a rotating basis.",
-      subreddits: "Winterscapes, Springscapes, Summerscapes, Autumnscapes",
+      subreddits:
+        "ImaginaryWinterscapes, ImaginarySpringscapes, ImaginarySummerscapes, ImaginaryAutumnscapes",
       isCyclicalRotation: true,
       lastSourcedSubreddit: 0,
     },
@@ -34,7 +53,8 @@ const initPostingScheduleDays = async () => {
       nickname: "Magic Monday",
       description:
         "Art with magical and high-fantasy themes: wizards, witches, elves, dragons and such.",
-      subreddits: "Witches, Wizards, Dwarves, Elves, Dragons",
+      subreddits:
+        "ImaginaryWitches, ImaginaryWizards, ImaginaryDwarves, ImaginaryElves, ImaginaryDragons",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -42,7 +62,8 @@ const initPostingScheduleDays = async () => {
       id: 2,
       nickname: "Techno Tueday",
       description: "Artistic works with steampunk and cyberpunk themes.",
-      subreddits: "Cybernetics, Cyberpunk, Steampunk, Mechs, Starships",
+      subreddits:
+        "ImaginaryCybernetics, ImaginaryCyberpunk, ImaginarySteampunk, ImaginaryMechs, ImaginaryStarships",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -52,7 +73,7 @@ const initPostingScheduleDays = async () => {
       description:
         "Art of all kinds of fantasy warriors, from sneaky assassins to battered brawlers.",
       subreddits:
-        "Battlefields, Archers, Assassins, Knights, Soldiers, Warriors",
+        "ImaginaryBattlefields, ImaginaryArchers, ImaginaryAssassins, ImaginaryKnights, ImaginarySoldiers, ImaginaryWarriors",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -62,7 +83,7 @@ const initPostingScheduleDays = async () => {
       description:
         'I couldn\'t think of a good "th"-word, so today we just have some random themes: angels, demons, scholars, merfolk and more.',
       subreddits:
-        "Angels, Orcs, Scholars, Mythology, Nobles, Elementals, Undead, Demons, Faeries, Merfolk, Humans",
+        "ImaginaryAngels, ImaginaryOrcs, ImaginaryScholars, ImaginaryMythology, ImaginaryNobles, ImaginaryElementals, ImaginaryUndead, ImaginaryDemons, ImaginaryFaeries, ImaginaryMerfolk, ImaginaryHumans",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -71,7 +92,8 @@ const initPostingScheduleDays = async () => {
       nickname: "Fandom Friday",
       description:
         "Fantasy art from some cool established universes (Warcraft, Middle Earth, Elder Scrolls and The Witcher), on a rotating schedule.",
-      subreddits: "Azeroth, MiddleEarth, Tamriel, Witcher",
+      subreddits:
+        "ImaginaryAzeroth, ImaginaryMiddleEarth, ImaginaryTamriel, ImaginaryWitcher",
       isCyclicalRotation: true,
       lastSourcedSubreddit: 0,
     },
@@ -81,7 +103,7 @@ const initPostingScheduleDays = async () => {
       description:
         "Art of beautiful places, from majestic landscapes to towering castles.",
       subreddits:
-        "Architecture, Castles, Dwellings, Pathways, Seascapes, Wildlands, Worlds",
+        "ImaginaryArchitecture, ImaginaryCastles, ImaginaryDwellings, ImaginaryPathways, ImaginarySeascapes, ImaginaryWildlands, ImaginaryWorlds",
       isCyclicalRotation: false,
       lastSourcedSubreddit: 0,
     },
@@ -101,14 +123,33 @@ const initPostingScheduleDays = async () => {
  * we'll initialize the data using the top 3 posts of all time for each subreddit.
  */
 const initQueuedInstagramPosts = async () => {
-  // get all the subreddits from the DB
   const r = new snoowrap({
     userAgent: process.env.REDDIT_USER_AGENT,
     clientId: process.env.REDDIT_CLIENT_ID,
-    clientSecret: process.env.REDDIT_CLIENT_SERCET,
+    clientSecret: process.env.REDDIT_CLIENT_SECRET,
     username: process.env.REDDIT_USERNAME,
     password: process.env.REDDIT_PASSWORD,
   });
+
+  for (const subredditDisplayName of await getAllSubredditDisplayNames()) {
+    const posts = await r
+      .getSubreddit(subredditDisplayName)
+      .getTop({ time: "all", limit: 6 });
+    for (const post of posts) {
+      try {
+        console.log(
+          "Attempting to insert " +
+            getPostUrlFromSubmission(post) +
+            " into DB..."
+        );
+        await pushToQueue(await getINEPostInfo(post, r));
+        console.log("Attempt success.");
+      } catch (error) {
+        console.log("Error: " + (error as any).message);
+      }
+      console.log();
+    }
+  }
 };
 
 /* **********************

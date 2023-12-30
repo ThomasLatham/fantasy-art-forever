@@ -21,7 +21,7 @@ const GET = (request: NextRequest) => {
     !(
       process.env.REDDIT_USER_AGENT &&
       process.env.REDDIT_CLIENT_ID &&
-      process.env.REDDIT_CLIENT_SERCET &&
+      process.env.REDDIT_CLIENT_SECRET &&
       process.env.REDDIT_USERNAME &&
       process.env.REDDIT_PASSWORD
     )
@@ -33,7 +33,7 @@ const GET = (request: NextRequest) => {
   const r = new snoowrap({
     userAgent: process.env.REDDIT_USER_AGENT,
     clientId: process.env.REDDIT_CLIENT_ID,
-    clientSecret: process.env.REDDIT_CLIENT_SERCET,
+    clientSecret: process.env.REDDIT_CLIENT_SECRET,
     username: process.env.REDDIT_USERNAME,
     password: process.env.REDDIT_PASSWORD,
   });

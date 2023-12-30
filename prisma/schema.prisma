@@ -18,15 +18,16 @@ datasource db {
 /// 2.) We want to have backup Reddit posts in case something goes wrong during scraping, for the
 /// sake of high availability for our application.
 model QueuedInstagramPost {
-  id                  String   @id @default(cuid()) /// Uniquely identifies a queue item.
-  redditPostUrl       String /// The URL of the post from Reddit (in the INE).
-  redditOP            String /// The username of the user who created the Reddit post.
-  artworkTitle        String /// The title of the artwork that is the subject of the post.
-  artistName          String /// The name of the artist who created the artwork.
-  linkToArtworkSource String /// A link to source of the artwork.
-  isBackup            String /// If `true`, then this post is a backup post in case something is wrong with a regular queued post.
-  postingTime         Int /// The time of day (6, 9, 12, 15, 18) to create this post on Instagram. Backups are given the value "-1".
-  createdAt           DateTime @default(now()) /// Indicates when this item was added to the queue.
+  id                   String   @id @default(cuid()) /// Uniquely identifies a queue item.
+  redditPostId         String   @unique /// The URL of the post from Reddit (in the INE).
+  subredditDisplayName String /// The subreddit where the post was submitted.
+  redditOP             String /// The username of the user who created the Reddit post.
+  artworkTitle         String /// The title of the artwork that is the subject of the post.
+  artistName           String /// The name of the artist who created the artwork.
+  linkToArtworkSource  String /// A link to source of the artwork.
+  isBackup             Boolean /// If `true`, then this post is a backup post in case something is wrong with a regular queued post.
+  postingTime          Int /// The time of day (6, 9, 12, 15, 18) to create this post on Instagram. Backups are given the value "-1".
+  createdAt            DateTime @default(now()) /// Indicates when this item was added to the queue.
 }
 
 /// Keeps track of the posts we've submitted to Instagram. Maybe will be used for data analysis at
@@ -45,11 +46,10 @@ model PostingScheduleDay {
   nickname    String /// The nickname for the posting day (e.g., "Magic Monday" or "Techno Tuesday").
   description String /// The description of the theme for the posting day.
 
-  /// A single string holding a comma-space-separated list of the subreddits sourced for posting on
-  /// this day. The names of the subreddits are shortened, omitting the convention of subreddits
-  /// from the INE (e.g., "r/ImaginaryBattlefields" is in the list as "Battlefields".) So in this
-  /// way, this field might have the value "Winterscapes, Springscapes, Summerscapes, Autumnscapes".
-  subreddits String
+  /// A single string holding a comma-space-separated list of the display names of the subreddits
+  /// sourced for posting on this day (e.g., "ImaginaryWinterscapes, ImaginarySpringscapes,
+  /// ImaginarySummerscapes, ImaginaryAutumnscapes".
+  subredditDisplayNames String
 
   /// If true, then the `subreddits` are cycled through for sourcing purposes. Otherwise, one
   /// subreddit is chosen each week at random.
