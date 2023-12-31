@@ -1,15 +1,25 @@
 import type { NextRequest } from "next/server";
 
-import snoo from "../../../../utils/reddit";
+import snoo, {
+  getINEPostInfo,
+  getPostUrlFromSubmission,
+} from "../../../../utils/reddit";
+import { POSTS_PER_SUBREDDIT } from "@/constants";
+import {
+  getAllSubredditDisplayNames,
+  getQueueItemsBySubredditCount,
+  pushToQueue,
+} from "@/utils/database";
 
 /**
- * This script is designed to run every 6 hours (4 times a day). We want to always have 2 backup
- * posts for every queued post in case there is an issue with a queued post.
+ * This script is designed to run every 6 hours (4 times a day). For each subreddit we source,
+ * checks if we have enough posts in the queue; if more posts are needed, it sources them from
+ * Reddit and adds them to the queue.
  *
  * @param request The request from the cronjob service.
  * @returns An HTTP response according to the success state of the request.
  */
-const GET = (request: NextRequest) => {
+const GET = async (request: NextRequest) => {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response("Unauthorized", {
@@ -17,9 +27,47 @@ const GET = (request: NextRequest) => {
     });
   }
 
-  // get a post from reddit
+  try {
+    for (const subredditDisplayName of await getAllSubredditDisplayNames()) {
+      let queueItemsForSubredditCount = await getQueueItemsBySubredditCount(
+        subredditDisplayName
+      );
+      if (queueItemsForSubredditCount >= POSTS_PER_SUBREDDIT) {
+        continue;
+      }
+      const topPostsOfTheWeek = await snoo
+        .getSubreddit(subredditDisplayName)
+        .getTop({ time: "week", limit: 6 });
+      let lastIndexTried = 0;
 
-  // add it to the DB
+      while (queueItemsForSubredditCount < POSTS_PER_SUBREDDIT) {
+        try {
+          console.log(
+            "Attempting to insert " +
+              getPostUrlFromSubmission(topPostsOfTheWeek[lastIndexTried]) +
+              " into DB..."
+          );
+          await pushToQueue(
+            await getINEPostInfo(topPostsOfTheWeek[lastIndexTried])
+          );
+          queueItemsForSubredditCount++;
+          console.log("Attempt success.");
+        } catch (error) {
+          console.log("Error: " + (error as any).message);
+        } finally {
+          lastIndexTried++;
+          console.log();
+        }
+      }
+    }
+  } catch (error) {
+    return new Response(
+      "Something went wrong on our end. Error: " + (error as any).message,
+      {
+        status: 500,
+      }
+    );
+  }
 
   return Response.json({ success: true });
 };

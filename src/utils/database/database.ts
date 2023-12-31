@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
+import { Submission } from "snoowrap";
 
-import { INEPostInfo } from "../../constants";
+import { INEPostInfo, POSTS_PER_SUBREDDIT } from "../../constants";
+import snoo, { getINEPostInfo } from "../reddit";
 
 //#region PRISMA SINGLETON
 
@@ -16,32 +18,30 @@ const prisma = globalThis.prisma ?? prismaClientSingleton();
 
 //#region CREATE
 
-const pushToQueue = async (postInfo: INEPostInfo) => {
+/**
+ * Pushes the details of a Reddit post to the Instagram-post queue.
+ *
+ * @param postInfo The details of the Reddit post we want to queue up.
+ * @returns The count of the queue items from the given `postInfo`'s subreddit.
+ */
+const pushToQueue = async (postInfo: INEPostInfo): Promise<number> => {
   // see how many posts are in the queue from the same subreddit
   const queueItemsOfSameSubreddit = await getQueueItemsBySubreddit(
     postInfo.subredditDisplayName
   );
-
-  if (queueItemsOfSameSubreddit.length === 0) {
-    // insert the record not as a backup
-    await pushToQueueHelper(postInfo, false);
-  } else if (queueItemsOfSameSubreddit.length === 1) {
-    // queue up the backup item
-    await queueUpBackupItem(queueItemsOfSameSubreddit[0].id);
-    // insert the new record as a backup
-    await pushToQueueHelper(postInfo, true);
-  } else if (queueItemsOfSameSubreddit.length === 2) {
-    // queue up the older backup item
+  if (queueItemsOfSameSubreddit.length < POSTS_PER_SUBREDDIT) {
+    // queue up the oldest backup item
     const olderBackupId = queueItemsOfSameSubreddit.reduce((prev, cur) => {
       return cur.createdAt > prev.createdAt ? prev : cur;
     }).id;
     await queueUpBackupItem(olderBackupId);
+
     // insert the new record as a backup
     await pushToQueueHelper(postInfo, true);
+
+    return queueItemsOfSameSubreddit.length + 1;
   } else {
-    console.log(
-      "Queue already full for subreddit: " + postInfo.subredditDisplayName
-    );
+    return POSTS_PER_SUBREDDIT;
   }
 };
 
@@ -85,6 +85,12 @@ const getQueueItemsBySubreddit = async (subredditDisplayName: string) => {
   });
 };
 
+const getQueueItemsBySubredditCount = async (subredditDisplayName: string) => {
+  return await prisma.queuedInstagramPost.count({
+    where: { subredditDisplayName: subredditDisplayName },
+  });
+};
+
 //#endregion
 
 //#region UPDATE
@@ -102,7 +108,11 @@ const queueUpBackupItem = async (queueItemId: string) => {
 
 //#endregion
 
-export { getAllSubredditDisplayNames, pushToQueue };
+export {
+  getAllSubredditDisplayNames,
+  getQueueItemsBySubredditCount,
+  pushToQueue,
+};
 export default prisma;
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;

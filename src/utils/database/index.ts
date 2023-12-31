@@ -1,4 +1,12 @@
-import prisma, { getAllSubredditDisplayNames, pushToQueue } from "./database";
+import prisma, {
+  getAllSubredditDisplayNames,
+  getQueueItemsBySubredditCount,
+  pushToQueue,
+} from "./database";
 
-export { getAllSubredditDisplayNames, pushToQueue };
+export {
+  getAllSubredditDisplayNames,
+  getQueueItemsBySubredditCount,
+  pushToQueue,
+};
 export default prisma;

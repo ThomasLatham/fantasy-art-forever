@@ -7,7 +7,15 @@ artist credit. As such, this project also keeps high standards for artist and po
 *A note for transparency:* As an automated bot, this project doesn't always parse the scraped data
 in such a way as to give proper attribution (e.g., the occasional messed-up post title or artist
 name), and I apologize for this. Further, in the case of OC (original content) posts to the sourced
-subreddits, the bot attributes the work on Instagram using the OP's (original poster's) Reddit username.
+subreddits, the bot attributes the work on Instagram using the OP's (original poster's) Reddit
+username.
+
+<!-- omit in toc -->
+## Table of Contents
+1. [Posting Schedule](#posting-schedule)
+2. [How It Works](#how-it-works)
+3. [Motivation](#motivation)
+
 
 ## Posting Schedule
 
@@ -117,3 +125,22 @@ backup, dequeuing all 3 in case of success or Reddit-post-induced failure.
 
 The time of day Instagram posts are made is randomized between 5 different times: 6 am, 9 am, 12 pm,
 3 pm and 6 pm (all Eastern Time).
+
+### Technologies Used
+The bot is a [Next.js](https://nextjs.org/) application hosted on [Vercel](https://vercel.com/home).
+You might be thinking, "[~~But isn't Betty a woman's name?~~](https://www.youtube.com/watch?v=pz1rjq5emKY&ab_channel=Dude902) But isn't Next.js a
+frontend framework?" The answer to that is "Yes;" however, Next.js offers a very convenient (and
+free) way to define public API endpoints, and we can store the business logic of the application in
+such endpoints.
+
+Having one endpoint for the logic of sourcing Reddit posts and another for the logic of posting to
+Instagram, we then use the cron-scheduling service [cron-job.org](https://cron-job.org/en/) (also
+free; maybe you're starting to see a theme here) to call those endpoints on set schedules.
+
+## Motivation
+There are a few reasons I made this bot:
+1. I like automating things and wanted to successfully automate a bot like this.
+2. I like fantasy art, having even once been a pretty active moderator/contributor/consumer of the
+   INE, and it's cool to share it with others.
+3. I might want to do some analysis on the data this app scrapes and produces.
+4. It's something to blog about. 
