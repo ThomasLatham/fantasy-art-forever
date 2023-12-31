@@ -61,6 +61,9 @@ const GET = async (request: NextRequest) => {
       }
     }
   } catch (error) {
+    console.log(
+      "Something went wrong on our end. Error: " + (error as any).message
+    );
     return new Response(
       "Something went wrong on our end. Error: " + (error as any).message,
       {
