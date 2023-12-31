@@ -33,6 +33,9 @@ const GET = async (request: NextRequest) => {
         subredditDisplayName
       );
       if (queueItemsForSubredditCount >= POSTS_PER_SUBREDDIT) {
+        console.log(
+          "Queue already full for subreddit: " + subredditDisplayName
+        );
         continue;
       }
       const topPostsOfTheWeek = await snoo
@@ -61,11 +64,9 @@ const GET = async (request: NextRequest) => {
       }
     }
   } catch (error) {
-    console.log(
-      "Something went wrong on our end. Error: " + (error as any).message
-    );
+    console.log("Something went wrong. Error: " + (error as any).message);
     return new Response(
-      "Something went wrong on our end. Error: " + (error as any).message,
+      "Something went wrong. Error: " + (error as any).message,
       {
         status: 500,
       }

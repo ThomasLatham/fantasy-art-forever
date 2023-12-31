@@ -29,7 +29,12 @@ const pushToQueue = async (postInfo: INEPostInfo): Promise<number> => {
   const queueItemsOfSameSubreddit = await getQueueItemsBySubreddit(
     postInfo.subredditDisplayName
   );
-  if (queueItemsOfSameSubreddit.length < POSTS_PER_SUBREDDIT) {
+
+  if (queueItemsOfSameSubreddit.length === 0) {
+    // queue up the new item
+    await pushToQueueHelper(postInfo, false);
+    return 1;
+  } else if (queueItemsOfSameSubreddit.length < POSTS_PER_SUBREDDIT) {
     // queue up the oldest backup item
     const olderBackupId = queueItemsOfSameSubreddit.reduce((prev, cur) => {
       return cur.createdAt > prev.createdAt ? prev : cur;

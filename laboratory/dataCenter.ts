@@ -16,10 +16,10 @@ import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
  * Then in the terminal run `nodemod laboratory/dataCenter.ts` to execute them.
  */
 const describeDatabaseOperations = async () => {
-  // await prisma.postingScheduleDay.deleteMany();
-  // await initPostingScheduleDays();
-  await prisma.queuedInstagramPost.deleteMany();
-  await initQueuedInstagramPosts();
+  await prisma.postingScheduleDay.deleteMany();
+  await initPostingScheduleDays();
+  // await prisma.queuedInstagramPost.deleteMany();
+  // await initQueuedInstagramPosts();
 
   // await getLotsOfINEPostTitles();
 };
