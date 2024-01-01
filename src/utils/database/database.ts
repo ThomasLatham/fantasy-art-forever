@@ -152,6 +152,19 @@ const getSubredditForToday = async (
   };
 };
 
+const getPostingScheduleDayBySubreddit = async (
+  subredditDisplayName: string
+) => {
+  for (const postingScheduleDay of await prisma.postingScheduleDay.findMany()) {
+    if (
+      postingScheduleDay.subredditDisplayNames.includes(subredditDisplayName)
+    ) {
+      return postingScheduleDay;
+    }
+  }
+  throw new Error("No posting-schedule day found for the given subreddit.");
+};
+
 //#endregion
 
 //#region UPDATE
@@ -172,9 +185,11 @@ const queueUpBackupItem = async (queueItemId: string) => {
 export {
   getAllSubredditDisplayNames,
   getQueueItemsBySubreddit,
+  getQueueItemsBySubredditSorted,
   sortQueueItems,
   getQueueItemsBySubredditCount,
   getSubredditForToday,
+  getPostingScheduleDayBySubreddit,
   pushToQueue,
 };
 export default prisma;

@@ -21,6 +21,7 @@ const describeDatabaseOperations = async () => {
   // await prisma.queuedInstagramPost.deleteMany();
   // await initQueuedInstagramPosts();
   // await getLotsOfINEPostTitles();
+  await getINEPostImageLink();
 };
 
 //#region TABLE INITIALIZERS
@@ -213,6 +214,14 @@ const getLotsOfINEPostTitles = async () => {
 
   const csvContent = csvData.map((row) => row.join(",")).join("\n");
   fs.writeFileSync("ine_post_titles.csv", csvContent, "utf8");
+};
+
+const getINEPostImageLink = async () => {
+  // grab a post from the DB
+  const queuedPost = await prisma.queuedInstagramPost.findFirst();
+
+  // log the URL
+  console.log(await snoo.getSubmission(queuedPost.redditPostId).url);
 };
 
 //#endregion

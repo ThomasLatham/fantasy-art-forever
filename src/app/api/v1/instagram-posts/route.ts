@@ -1,14 +1,13 @@
 import type { NextRequest } from "next/server";
-import { IgApiClient } from "instagram-private-api";
-import { get } from "request-promise";
 import { PersistedValuesRecord } from "@prisma/client";
 
 import prisma, {
-  getQueueItemsBySubreddit,
+  getQueueItemsBySubredditSorted,
   getSubredditForToday,
 } from "@/utils/database";
 import { POSTING_TIMES } from "@/constants";
 import { now } from "@/utils/general";
+import { createInstagramPost } from "@/utils/instagram";
 
 /**
  * This script is designed to run every day 3 times before the earliest posting time and three times
@@ -127,6 +126,15 @@ const POST = async (request: NextRequest) => {
     );
   }
 
+  // reset the posting flag if it's a new day and before the first posting time
+  if (now().hour < POSTING_TIMES[0]) {
+    await prisma.persistedValuesRecord.update({
+      where: { id: persistedValuesRecord.id },
+      data: { hasPostBeenMadeToday: false },
+    });
+    console.log("Flag `hasPostBeenMadeToday` set to `false`.");
+  }
+
   // make sure we handle the request only after posting time and if a post hasn't already been made
   // today
   if (
@@ -164,49 +172,96 @@ const POST = async (request: NextRequest) => {
 
   //#region ATTEMPT TO POST
 
+  // declare some variable to keep track of
   const idsOfFailedPosts: string[] = [];
+  let instagramUploadId: string = "";
+  let successfulRedditPostId: string = "";
 
-  const queueItemsForSubredditForTodayOrdered = (
-    await getQueueItemsBySubreddit(subredditForToday)
-  ).toSorted((a, b) => {
-    if (!a.isBackup || !b.isBackup) {
-      return +!a.isBackup - +!b.isBackup;
-    } else {
-      return b.createdAt.getTime() - a.createdAt.getTime();
+  // get the queue items for today's subreddit
+  const queueItemsForSubredditForTodayOrdered =
+    await getQueueItemsBySubredditSorted(subredditForToday);
+
+  // try to submit exactly one of them
+  for (const queueItemToTry of queueItemsForSubredditForTodayOrdered) {
+    try {
+      instagramUploadId = await createInstagramPost(queueItemToTry);
+      if (instagramUploadId) {
+        successfulRedditPostId = queueItemToTry.redditPostId;
+        break;
+      } else {
+        console.log(
+          "Failed to create Instagram post with Reddit post " +
+            queueItemToTry.redditPostId +
+            "."
+        );
+        idsOfFailedPosts.push(queueItemToTry.id);
+      }
+    } catch (error) {
+      idsOfFailedPosts.push(queueItemToTry.id);
     }
-  });
+  }
 
-  // post to Instagram
-  if (!(process.env.IG_USERNAME && process.env.IG_PASSWORD)) {
-    return new Response("Internal Server Error", {
-      status: 500,
+  // remove from the queue any of the posts that failed
+  if (idsOfFailedPosts.length) {
+    await prisma.queuedInstagramPost.deleteMany({
+      where: {
+        OR: idsOfFailedPosts.map((idOfFailedPost) => {
+          return { id: idOfFailedPost };
+        }),
+      },
     });
   }
 
-  const ig = new IgApiClient();
-  ig.state.generateDevice(process.env.IG_USERNAME);
-  const auth = await ig.account.login(
-    process.env.IG_USERNAME,
-    process.env.IG_PASSWORD
+  // if all the posts failed then send a 500 response
+  if (!instagramUploadId) {
+    console.log("Failed to upload to Instagram.");
+    return new Response(
+      "Internal Server Error: Failed to upload to Instagram.",
+      {
+        status: 500,
+      }
+    );
+  }
+
+  // everything after is if it was successful
+  console.log(
+    "Instagram post with ID " + instagramUploadId + " created successfully."
   );
-  console.log(JSON.stringify(auth));
 
-  // getting random square image from internet as a Buffer
-  const imageBuffer = await get({
-    url: "https://picsum.photos/800/800", // random picture with 800x800 size
-    encoding: null, // this is required, only this way a Buffer is returned
+  // set the posted-today flag to `true`
+  await prisma.persistedValuesRecord.update({
+    where: { id: persistedValuesRecord.id },
+    data: { hasPostBeenMadeToday: true },
   });
 
-  const publishResult = await ig.publish.photo({
-    file: imageBuffer, // image buffer, you also can specify image from your disk using fs
-    caption: "Really nice photo from the internet! 💖", // nice caption (optional)
-  });
+  console.log("Flag `hasPostBeenMadeToday` set to `true`.");
 
-  console.log(publishResult); // publishResult.status should be "ok"
+  // try to create the creation record; respond to the request accordingly
+  try {
+    await prisma.submittedInstagramPost.create({
+      data: {
+        redditPostId: successfulRedditPostId,
+        instagramPostId: instagramUploadId,
+      },
+    });
+    console.log("Creation record created in database.");
+    return new Response(
+      "Created: Instagram post created successfully, and creation record created in database.",
+      {
+        status: 201,
+      }
+    );
+  } catch (error) {
+    console.log("Creation record failed to be created in database.");
+    return new Response(
+      "Multi-Status: Instagram post created successfully, but creation record failed to be created in database.",
+      {
+        status: 207,
+      }
+    );
+  }
 
   //#endregion
-
-  return Response.json({ success: true });
 };
 
 export { PUT, POST };

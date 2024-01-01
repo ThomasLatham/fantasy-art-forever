@@ -33,9 +33,9 @@ model QueuedInstagramPost {
 /// some point. Could also end up being redundant/unnecessary since we can probably just hit the
 /// Instagram API to get our old posts' details.
 model SubmittedInstagramPost {
-  id               String @id @default(cuid()) /// Uniquely identifies a succesfully submitted Instagram post.
-  redditPostUrl    String /// The URL of the post from Reddit (in the INE).
-  instagramPostUrl String /// The URL of our post to Instagram.
+  id              String @id @default(cuid()) /// Uniquely identifies a succesfully submitted Instagram post.
+  redditPostId    String /// The ID of the post from Reddit (in the INE).
+  instagramPostId String /// The ID of our post to Instagram.
 }
 
 /// A day in the posting schedule. There are seven `PostingScheduleDay`s, one for each day of the
