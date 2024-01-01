@@ -1,7 +1,7 @@
 import snoowrap from "snoowrap";
 
 import { INEPostInfo } from "../../constants";
-import { removeTrailingComma } from "../general";
+import { isJpegImage, removeTrailingComma } from "../general";
 
 //#region SNOOWRAP SINGLETON
 
@@ -86,31 +86,37 @@ const getINEPostInfo = async (
   submission: snoowrap.Submission
 ): Promise<INEPostInfo> => {
   try {
-    // Fetch the post details using the provided link
-    const post = await snoo.getSubmission(submission.id).fetch();
-
     // Extract information from the post title with various patterns
-    let { artworkTitle, artistName } = getArtworkDetails(post.title);
+    let { artworkTitle, artistName } = getArtworkDetails(submission.title);
 
-    if (isPostOC(post.link_flair_text, artistName)) {
-      artistName = "u/" + post.author.name;
+    if (isPostOC(submission.link_flair_text, artistName)) {
+      artistName = "u/" + submission.author.name;
     }
 
-    const redditOP = post.author.name;
+    const redditOP = submission.author.name;
 
     // Find the oldest comment by the redditOP that contains a link (assuming the link is in the comment body)
-    const comments = await post.comments.fetchAll();
+    const comments = await submission.comments.fetchAll();
 
     const oldestComment = comments
       .filter((comment) => comment.author.name === redditOP)
       .sort((a, b) => a.created_utc - b.created_utc)[0];
 
-    const linkToArtworkSource = oldestComment
+    let linkToArtworkSource = oldestComment
       ? oldestComment.body_html.match(/\bhttps?:\/\/\S+/gi)?.[0] || null
       : null;
 
     if (!linkToArtworkSource) {
       throw new Error("No comments with a valid source link found.");
+    }
+
+    linkToArtworkSource = linkToArtworkSource.split('">')[0];
+
+    // Make sure image URL exists and it's a JPEG
+    if (!(submission.url && isJpegImage(submission.url))) {
+      throw new Error(
+        "Artwork image URL does not exist, or the image could not be retrieved from the URL, or image is not a JPEG."
+      );
     }
 
     // Return the collected information as an object
@@ -124,6 +130,7 @@ const getINEPostInfo = async (
       artworkTitle: artworkTitle,
       artistName: artistName,
       linkToArtworkSource: linkToArtworkSource,
+      artworkImageUrl: submission.url,
     };
   } catch (error) {
     throw new Error(

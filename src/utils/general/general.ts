@@ -15,4 +15,20 @@ const now = () => {
   return DateTime.now().setZone("America/New_York");
 };
 
-export { wait, removeTrailingComma, now };
+const isJpegImage = async (imageUrl: string): Promise<boolean> => {
+  try {
+    const response = await fetch(imageUrl, { method: "HEAD" });
+    if (response.ok) {
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.toLowerCase().includes("image/jpeg")) {
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error("Error checking image type:", error);
+    return false;
+  }
+  return false;
+};
+
+export { wait, removeTrailingComma, now, isJpegImage };

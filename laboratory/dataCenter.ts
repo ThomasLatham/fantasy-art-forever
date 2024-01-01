@@ -1,3 +1,4 @@
+//#region IMPORTS
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env.local" });
 import { PostingScheduleDay } from "@prisma/client";
@@ -9,6 +10,7 @@ import prisma, {
   fillQueue,
   getAllSubredditDisplayNames,
 } from "../src/utils/database";
+//#endregion
 
 /**
  * Put your database operations that you want to execute in this function.
@@ -19,8 +21,8 @@ const describeDatabaseOperations = async () => {
   // await initPostingScheduleDays();
   // await prisma.queuedInstagramPost.deleteMany();
   // await initQueuedInstagramPosts();
-  // await getLotsOfINEPostTitles();
-  await getINEPostImageLink();
+  // await prisma.persistedValuesRecord.deleteMany();
+  // await initPersistedValueRecord();
 };
 
 //#region TABLE INITIALIZERS

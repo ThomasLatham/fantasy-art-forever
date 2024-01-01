@@ -197,6 +197,12 @@ const POST = async (request: NextRequest) => {
         idsOfFailedPosts.push(queueItemToTry.id);
       }
     } catch (error) {
+      console.log(
+        "Failed to create Instagram post with Reddit post " +
+          queueItemToTry.redditPostId +
+          ". Error: " +
+          (error as any).message
+      );
       idsOfFailedPosts.push(queueItemToTry.id);
     }
   }
@@ -218,11 +224,13 @@ const POST = async (request: NextRequest) => {
   });
   if (successfulRedditPostId || queueItemsToRemove.length) {
     console.log(
-      "Removed the following posts from queue:" + successfulRedditPostId
-        ? "\nSuccessful Upload: " + successfulRedditPostId
-        : "" + queueItemsToRemove.length
-        ? "\nFailed Upload: " + queueItemsToRemove.join(", ")
-        : ""
+      "Removed the following posts from queue:" +
+        (successfulRedditPostId
+          ? "\nSuccessful Upload: " + successfulRedditPostId
+          : "") +
+        (queueItemsToRemove.length
+          ? "\nFailed Upload: " + queueItemsToRemove.join(", ")
+          : "")
     );
   }
 

@@ -4,6 +4,7 @@ import {
   QueuedInstagramPost,
 } from "@prisma/client";
 import { Timespan } from "snoowrap/dist/objects/Subreddit";
+import { time } from "console";
 
 import { INEPostInfo, POSTS_PER_SUBREDDIT } from "../../constants";
 import snoo, { getINEPostInfo, getPostUrlFromSubmission } from "../reddit";
@@ -47,7 +48,10 @@ const fillQueue = async (
       }
       const topPostsToSource = await snoo
         .getSubreddit(subredditDisplayName)
-        .getTop({ time: "week", limit: 6 });
+        .getTop({
+          time: timespanOfTopPostsToSource,
+          limit: numberOfTopPostsToSource,
+        });
       let lastIndexTried = 0;
 
       while (queueItemsForSubredditCount < POSTS_PER_SUBREDDIT) {
@@ -254,7 +258,6 @@ const queueUpBackupItem = async (queueItemId: string) => {
 
 export {
   fillQueue,
-  pushToQueue,
   getAllSubredditDisplayNames,
   getQueueItemsBySubreddit,
   getQueueItemsBySubredditSorted,

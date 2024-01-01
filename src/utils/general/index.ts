@@ -1,3 +1,3 @@
-import { now, removeTrailingComma, wait } from "./general";
+import { now, removeTrailingComma, wait, isJpegImage } from "./general";
 
-export { wait, removeTrailingComma, now };
+export { wait, removeTrailingComma, now, isJpegImage };

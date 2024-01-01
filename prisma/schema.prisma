@@ -24,7 +24,8 @@ model QueuedInstagramPost {
   redditOP             String /// The username of the user who created the Reddit post.
   artworkTitle         String /// The title of the artwork that is the subject of the post.
   artistName           String /// The name of the artist who created the artwork.
-  linkToArtworkSource  String /// A link to source of the artwork.
+  linkToArtworkSource  String /// A link to source of the artwork, for attribution purposes.
+  artworkImageUrl      String /// The URL of the artwork that will be used for posting to Instagram (must be JPEG).
   isBackup             Boolean /// If `true`, then this post is a backup post in case something is wrong with a regular queued post.
   createdAt            DateTime @default(now()) /// Indicates when this item was added to the queue.
 }

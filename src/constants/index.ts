@@ -5,6 +5,7 @@ interface INEPostInfo {
   artworkTitle: string;
   artistName: string;
   linkToArtworkSource: string;
+  artworkImageUrl: string;
 }
 
 /**

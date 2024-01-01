@@ -1,6 +1,5 @@
 import prisma, {
   fillQueue,
-  pushToQueue,
   getAllSubredditDisplayNames,
   getQueueItemsBySubreddit,
   getQueueItemsBySubredditSorted,
@@ -11,7 +10,6 @@ import prisma, {
 
 export {
   fillQueue,
-  pushToQueue,
   getAllSubredditDisplayNames,
   getQueueItemsBySubreddit,
   getQueueItemsBySubredditSorted,

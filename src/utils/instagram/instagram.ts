@@ -1,6 +1,5 @@
 import { QueuedInstagramPost } from "@prisma/client";
 import { IgApiClient } from "instagram-private-api";
-import { get } from "request-promise";
 
 import snoo, { getPostUrlFromSubmission } from "../reddit";
 import { getPostingScheduleDayBySubreddit } from "../database";
@@ -37,9 +36,7 @@ const ig = await (async () => {
  */
 const createInstagramPost = async (postDetails: QueuedInstagramPost) => {
   const imageBuffer = Buffer.from(
-    await (
-      await fetch((await snoo.getSubmission(postDetails.redditPostId)).url)
-    ).arrayBuffer()
+    await (await fetch(postDetails.artworkImageUrl)).arrayBuffer()
   );
 
   const publishResult = await ig.publish.photo({
@@ -63,7 +60,7 @@ const getCaptionFromPostDetails = async (postDetails: QueuedInstagramPost) => {
   return `${postDetails.artworkTitle} by ${postDetails.artistName}
 Source: ${postDetails.linkToArtworkSource}
 Reddit Post: ${getPostUrlFromSubmission(
-    await snoo.getSubmission(postDetails.redditPostId)
+    await snoo.getSubmission(postDetails.redditPostId).fetch()
   )}
 Reddit OP: u/${postDetails.redditOP}
       
