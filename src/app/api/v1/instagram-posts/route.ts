@@ -226,10 +226,10 @@ const POST = async (request: NextRequest) => {
     console.log(
       "Removed the following posts from queue:" +
         (successfulRedditPostId
-          ? "\nSuccessful Upload: " + successfulRedditPostId
+          ? "\n\tSuccessful Upload: " + successfulRedditPostId
           : "") +
-        (queueItemsToRemove.length
-          ? "\nFailed Upload: " + queueItemsToRemove.join(", ")
+        (idsOfFailedPosts.length
+          ? "\n\tFailed Upload: " + idsOfFailedPosts.join(", ")
           : "")
     );
   }
