@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest",
     "migrate": "dotenv -e .env.local npx prisma migrate dev",
     "postinstall": "prisma generate",
     "tryit": "nodemon laboratory/experimentationRoom/centrifuge.ts",
@@ -15,6 +16,7 @@
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "instagram-private-api": "^1.45.3",
+    "lodash": "^4.17.21",
     "luxon": "^3.4.4",
     "next": "14.0.4",
     "raw-loader": "^4.0.2",
@@ -25,18 +27,24 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@testing-library/react": "^14.1.2",
+    "@types/lodash": "^4.14.202",
     "@types/luxon": "^3.3.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.0.1",
     "dotenv": "^16.3.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
     "eslint-plugin-import": "^2.29.1",
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^23.0.1",
     "postcss": "^8",
     "prisma": "^5.7.1",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^1.1.1"
   }
 }

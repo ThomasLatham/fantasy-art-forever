@@ -1,10 +1,14 @@
 import type { NextRequest } from "next/server";
 import { IgApiClient } from "instagram-private-api";
 import { get } from "request-promise";
-import { DateTime } from "luxon";
+import { PersistedValuesRecord } from "@prisma/client";
 
-import prisma from "@/utils/database";
+import prisma, {
+  getQueueItemsBySubreddit,
+  getSubredditForToday,
+} from "@/utils/database";
 import { POSTING_TIMES } from "@/constants";
+import { now } from "@/utils/general";
 
 /**
  * This script is designed to run every day 3 times before the earliest posting time and three times
@@ -23,10 +27,10 @@ const PUT = async (request: NextRequest) => {
     });
   }
 
-  if (DateTime.now().hour < POSTING_TIMES[0]) {
+  if (now().hour < POSTING_TIMES[0]) {
     try {
       if (
-        (await prisma.persistedValuesRecord.findMany({ where: {} }))[0]
+        (await prisma.persistedValuesRecord.findFirst({ where: {} }))!
           .hasPostingTimeBeenUpdatedToday
       ) {
         return new Response(
@@ -54,7 +58,7 @@ const PUT = async (request: NextRequest) => {
         }
       );
     }
-  } else if (DateTime.now().hour > POSTING_TIMES[POSTING_TIMES.length - 1]) {
+  } else if (now().hour > POSTING_TIMES[POSTING_TIMES.length - 1]) {
     try {
       await prisma.persistedValuesRecord.updateMany({
         where: {},
@@ -84,12 +88,13 @@ const PUT = async (request: NextRequest) => {
 };
 
 /**
- * This script is designed to run once a day for posting to Instagram.
+ * The script for posting to Instagram. Only posts once a day, but gets called throughout the day to
+ * account for randomized posting times and the chance of failure.
  *
  * @param request The request from the cronjob service.
  * @returns An HTTP response according to the success state of the request.
  */
-const GET = async (request: NextRequest) => {
+const POST = async (request: NextRequest) => {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response("Unauthorized", {
@@ -97,42 +102,79 @@ const GET = async (request: NextRequest) => {
     });
   }
 
+  let persistedValuesRecord: PersistedValuesRecord | null;
+
+  //#region POSTING-TIME CHECK
+
+  try {
+    persistedValuesRecord = await prisma.persistedValuesRecord.findFirst({
+      where: {},
+    });
+    if (!persistedValuesRecord) {
+      return new Response(
+        "Internal Server Error: Could not get today's posting time.",
+        {
+          status: 500,
+        }
+      );
+    }
+  } catch (error) {
+    return new Response(
+      "Internal Server Error: Could not get today's posting time.",
+      {
+        status: 500,
+      }
+    );
+  }
+
+  // make sure we handle the request only after posting time and if a post hasn't already been made
+  // today
+  if (
+    now().hour < persistedValuesRecord.postingTimeForToday ||
+    persistedValuesRecord.hasPostBeenMadeToday
+  ) {
+    return new Response(
+      "Accepted: No action taken, as it is not yet posting time, or a post has already been made today.",
+      {
+        status: 202,
+      }
+    );
+  }
+
+  //#endregion
+
   // get the posting schedule details for today
   const postingScheduleDetailsForToday =
     await prisma.postingScheduleDay.findUnique({
-      where: { id: DateTime.now().setZone("America/New_York").weekday % 7 },
+      where: { id: now().weekday % 7 },
     });
 
   if (!postingScheduleDetailsForToday) {
-    return new Response("Internal Server Error", {
-      status: 500,
-    });
+    return new Response(
+      "Internal Server Error: Could not get posting schedule details.",
+      {
+        status: 500,
+      }
+    );
   }
 
   // get the next subreddit from which to source
-  let indexOfSubredditForToday: number;
-  const subredditForToday = ((): string => {
-    if (postingScheduleDetailsForToday.isCyclicalRotation) {
-      indexOfSubredditForToday =
-        (postingScheduleDetailsForToday.lastSourcedSubreddit + 1) %
-        postingScheduleDetailsForToday.subredditDisplayNames.length;
+  const { subredditForToday, indexOfSubredditForToday } =
+    await getSubredditForToday(postingScheduleDetailsForToday);
+
+  //#region ATTEMPT TO POST
+
+  const idsOfFailedPosts: string[] = [];
+
+  const queueItemsForSubredditForTodayOrdered = (
+    await getQueueItemsBySubreddit(subredditForToday)
+  ).toSorted((a, b) => {
+    if (!a.isBackup || !b.isBackup) {
+      return +!a.isBackup - +!b.isBackup;
     } else {
-      indexOfSubredditForToday =
-        postingScheduleDetailsForToday.lastSourcedSubreddit;
-      while (
-        indexOfSubredditForToday ===
-        postingScheduleDetailsForToday.lastSourcedSubreddit
-      ) {
-        indexOfSubredditForToday = Math.floor(
-          Math.random() *
-            postingScheduleDetailsForToday.subredditDisplayNames.length
-        );
-      }
+      return b.createdAt.getTime() - a.createdAt.getTime();
     }
-    return postingScheduleDetailsForToday.subredditDisplayNames[
-      indexOfSubredditForToday
-    ];
-  })();
+  });
 
   // post to Instagram
   if (!(process.env.IG_USERNAME && process.env.IG_PASSWORD)) {
@@ -162,7 +204,9 @@ const GET = async (request: NextRequest) => {
 
   console.log(publishResult); // publishResult.status should be "ok"
 
+  //#endregion
+
   return Response.json({ success: true });
 };
 
-export { PUT, GET };
+export { PUT, POST };

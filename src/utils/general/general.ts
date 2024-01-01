@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+
 const wait = (ms: number): Promise<void> => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
@@ -9,4 +11,8 @@ const removeTrailingComma = (str: string): string => {
   return str;
 };
 
-export { wait, removeTrailingComma };
+const now = () => {
+  return DateTime.now().setZone("America/New_York");
+};
+
+export { wait, removeTrailingComma, now };

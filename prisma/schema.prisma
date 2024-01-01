@@ -68,6 +68,7 @@ model PostingScheduleDay {
 /// A single-record table for storing values that need to be persisted for the application.
 model PersistedValuesRecord {
   id                             String  @id @default(cuid()) /// Kind of pointless since this table is only supposed to have one record.
-  postingTimeForToday            Int /// The time of day (6, 9, 12, 15, 18) in Eastern Time (America/New_York) to create a post on Instagram for the current day.
-  hasPostingTimeBeenUpdatedToday Boolean /// Value is `true` if the `postingTImeForToday` has already been updated today.
+  postingTimeForToday            Int     @default(6) /// The time of day (6, 9, 12, 15, 18) in Eastern Time (America/New_York) to create a post on Instagram for the current day.
+  hasPostingTimeBeenUpdatedToday Boolean @default(true) /// Value is `true` if the `postingTimeForToday` has already been updated today.
+  hasPostBeenMadeToday           Boolean @default(false) /// Value is `true` if the we've already posted to Instagram today.
 }

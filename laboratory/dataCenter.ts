@@ -181,7 +181,11 @@ const initPostingScheduleDays = async () => {
 
 const initPersistedValueRecord = async () => {
   await prisma.persistedValuesRecord.create({
-    data: { postingTimeForToday: 6, hasPostingTimeBeenUpdatedToday: true },
+    data: {
+      postingTimeForToday: 6,
+      hasPostingTimeBeenUpdatedToday: true,
+      hasPostBeenMadeToday: false,
+    },
   });
 };
 

@@ -1,3 +1,3 @@
-import { removeTrailingComma, wait } from "./general";
+import { now, removeTrailingComma, wait } from "./general";
 
-export { wait, removeTrailingComma };
+export { wait, removeTrailingComma, now };

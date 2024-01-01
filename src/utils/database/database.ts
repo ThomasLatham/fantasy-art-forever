@@ -1,4 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import {
+  PostingScheduleDay,
+  PrismaClient,
+  QueuedInstagramPost,
+} from "@prisma/client";
 
 import { INEPostInfo, POSTS_PER_SUBREDDIT } from "../../constants";
 
@@ -85,10 +89,67 @@ const getQueueItemsBySubreddit = async (subredditDisplayName: string) => {
   });
 };
 
+const getQueueItemsBySubredditSorted = async (subredditDisplayName: string) => {
+  return sortQueueItems(await getQueueItemsBySubreddit(subredditDisplayName));
+};
+
+const sortQueueItems = (queueItems: QueuedInstagramPost[]) => {
+  return queueItems.toSorted((a, b) => {
+    if (!a.isBackup || !b.isBackup) {
+      return +!b.isBackup - +!a.isBackup;
+    } else {
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    }
+  });
+};
+
 const getQueueItemsBySubredditCount = async (subredditDisplayName: string) => {
   return await prisma.queuedInstagramPost.count({
     where: { subredditDisplayName: subredditDisplayName },
   });
+};
+
+const getSubredditForToday = async (
+  postingScheduleDetailsForToday: PostingScheduleDay
+) => {
+  let indexOfSubredditForToday: number;
+
+  if (postingScheduleDetailsForToday.isCyclicalRotation) {
+    indexOfSubredditForToday =
+      (postingScheduleDetailsForToday.lastSourcedSubreddit + 1) %
+      postingScheduleDetailsForToday.subredditDisplayNames.length;
+  } else {
+    const subredditDisplayNamesWithoutLastSourced =
+      postingScheduleDetailsForToday.subredditDisplayNames.filter(
+        (subredditDisplayName) => {
+          return (
+            subredditDisplayName !==
+            postingScheduleDetailsForToday.subredditDisplayNames[
+              postingScheduleDetailsForToday.lastSourcedSubreddit
+            ]
+          );
+        }
+      );
+
+    const subredditForTodayInternal =
+      subredditDisplayNamesWithoutLastSourced[
+        Math.floor(
+          Math.random() * subredditDisplayNamesWithoutLastSourced.length
+        )
+      ];
+
+    indexOfSubredditForToday =
+      postingScheduleDetailsForToday.subredditDisplayNames.indexOf(
+        subredditForTodayInternal
+      );
+  }
+  return {
+    subredditForToday:
+      postingScheduleDetailsForToday.subredditDisplayNames[
+        indexOfSubredditForToday
+      ],
+    indexOfSubredditForToday,
+  };
 };
 
 //#endregion
@@ -110,7 +171,10 @@ const queueUpBackupItem = async (queueItemId: string) => {
 
 export {
   getAllSubredditDisplayNames,
+  getQueueItemsBySubreddit,
+  sortQueueItems,
   getQueueItemsBySubredditCount,
+  getSubredditForToday,
   pushToQueue,
 };
 export default prisma;

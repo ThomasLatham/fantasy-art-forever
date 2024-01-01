@@ -19,13 +19,15 @@ import {
  * @param request The request from the cronjob service.
  * @returns An HTTP response according to the success state of the request.
  */
-const GET = async (request: NextRequest) => {
+const POST = async (request: NextRequest) => {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response("Unauthorized", {
       status: 401,
     });
   }
+
+  let hasPostBeenQueued: boolean = false;
 
   try {
     for (const subredditDisplayName of await getAllSubredditDisplayNames()) {
@@ -54,6 +56,7 @@ const GET = async (request: NextRequest) => {
             await getINEPostInfo(topPostsOfTheWeek[lastIndexTried])
           );
           queueItemsForSubredditCount++;
+          hasPostBeenQueued = true;
           console.log("Attempt success.");
         } catch (error) {
           console.log("Error: " + (error as any).message);
@@ -72,8 +75,14 @@ const GET = async (request: NextRequest) => {
       }
     );
   }
-
-  return Response.json({ success: true });
+  return new Response(
+    hasPostBeenQueued
+      ? "Created: New post(s) queued up."
+      : "Accepted: No action taken, as queue is already full.",
+    {
+      status: hasPostBeenQueued ? 201 : 202,
+    }
+  );
 };
 
-export { GET };
+export { POST };
