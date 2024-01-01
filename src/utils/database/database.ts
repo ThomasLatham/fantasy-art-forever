@@ -1,8 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { Submission } from "snoowrap";
 
 import { INEPostInfo, POSTS_PER_SUBREDDIT } from "../../constants";
-import snoo, { getINEPostInfo } from "../reddit";
 
 //#region PRISMA SINGLETON
 
@@ -55,15 +53,8 @@ const pushToQueueHelper = async (postInfo: INEPostInfo, isBackup: boolean) => {
     data: {
       ...postInfo,
       isBackup: isBackup,
-      postingTime: generatePostingTime(),
     },
   });
-};
-
-const generatePostingTime = () => {
-  const values: number[] = [6, 9, 12, 15, 18];
-  const randomIndex: number = Math.floor(Math.random() * values.length);
-  return values[randomIndex];
 };
 
 //#endregion
@@ -75,9 +66,13 @@ const generatePostingTime = () => {
  * "ImaginaryWildlands").
  */
 const getAllSubredditDisplayNames = async () => {
-  return (await prisma.postingScheduleDay.findMany())
-    .map((postingScheduleDay) => {
-      return postingScheduleDay.subredditDisplayNames.split(", ");
+  return (
+    await prisma.postingScheduleDay.findMany({
+      select: { subredditDisplayNames: true },
+    })
+  )
+    .map((subredditDisplayNamesObj) => {
+      return subredditDisplayNamesObj.subredditDisplayNames;
     })
     .reduce((prev, cur) => {
       return prev.concat(...cur);

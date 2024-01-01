@@ -137,6 +137,10 @@ Having one endpoint for the logic of sourcing Reddit posts and another for the l
 Instagram, we then use the cron-scheduling service [cron-job.org](https://cron-job.org/en/) (also
 free; maybe you're starting to see a theme here) to call those endpoints on set schedules.
 
+For the part in between sourcing posts from Reddit and creating posts on Instagram — that is, for
+persisting the Reddit posts' details — I'm using [Supabase](https://supabase.com/) (you guessed it,
+for free).
+
 ## Motivation
 There are a few reasons I made this bot:
 1. I like automating things and wanted to successfully automate a bot like this.

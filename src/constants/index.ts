@@ -13,5 +13,10 @@ interface INEPostInfo {
  */
 const POSTS_PER_SUBREDDIT = 3;
 
+/**
+ * The possible times of day when we can post to Instagram.
+ */
+const POSTING_TIMES = [6, 9, 12, 15, 18];
+
 export type { INEPostInfo };
-export { POSTS_PER_SUBREDDIT };
+export { POSTS_PER_SUBREDDIT, POSTING_TIMES };

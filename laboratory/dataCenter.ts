@@ -16,99 +16,14 @@ import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
  * Then in the terminal run `nodemod laboratory/dataCenter.ts` to execute them.
  */
 const describeDatabaseOperations = async () => {
-  await prisma.postingScheduleDay.deleteMany();
-  await initPostingScheduleDays();
+  // await prisma.postingScheduleDay.deleteMany();
+  // await initPostingScheduleDays();
   // await prisma.queuedInstagramPost.deleteMany();
   // await initQueuedInstagramPosts();
-
   // await getLotsOfINEPostTitles();
 };
 
 //#region TABLE INITIALIZERS
-
-/**
- * Fills the `PostingScheduleDay` table with initial data. Reflects the information in the README
- * concerning the posting schedule.
- */
-const initPostingScheduleDays = async () => {
-  const postingScheduleDays: PostingScheduleDay[] = [
-    {
-      id: 0,
-      nickname: "Seasonal Sunday",
-      description:
-        "Art depicting one of the four seasons, on a rotating basis.",
-      subredditDisplayNames:
-        "ImaginaryWinterscapes, ImaginarySpringscapes, ImaginarySummerscapes, ImaginaryAutumnscapes",
-      isCyclicalRotation: true,
-      lastSourcedSubreddit: 0,
-    },
-    {
-      id: 1,
-      nickname: "Magic Monday",
-      description:
-        "Art with magical and high-fantasy themes: wizards, witches, elves, dragons and such.",
-      subredditDisplayNames:
-        "ImaginaryWitches, ImaginaryWizards, ImaginaryDwarves, ImaginaryElves, ImaginaryDragons",
-      isCyclicalRotation: false,
-      lastSourcedSubreddit: 0,
-    },
-    {
-      id: 2,
-      nickname: "Techno Tueday",
-      description: "Artistic works with steampunk and cyberpunk themes.",
-      subredditDisplayNames:
-        "ImaginaryCybernetics, ImaginaryCyberpunk, ImaginarySteampunk, ImaginaryMechs, ImaginaryStarships",
-      isCyclicalRotation: false,
-      lastSourcedSubreddit: 0,
-    },
-    {
-      id: 3,
-      nickname: "Warrior Wednesday",
-      description:
-        "Art of all kinds of fantasy warriors, from sneaky assassins to battered brawlers.",
-      subredditDisplayNames:
-        "ImaginaryBattlefields, ImaginaryArchers, ImaginaryAssassins, ImaginaryKnights, ImaginarySoldiers, ImaginaryWarriors",
-      isCyclicalRotation: false,
-      lastSourcedSubreddit: 0,
-    },
-    {
-      id: 4,
-      nickname: "Alliteration-Is-Hard Thursday",
-      description:
-        'I couldn\'t think of a good "th"-word, so today we just have some random themes: angels, demons, scholars, merfolk and more.',
-      subredditDisplayNames:
-        "ImaginaryAngels, ImaginaryOrcs, ImaginaryScholars, ImaginaryMythology, ImaginaryNobles, ImaginaryElementals, ImaginaryUndead, ImaginaryDemons, ImaginaryFaeries, ImaginaryMerfolk, ImaginaryHumans",
-      isCyclicalRotation: false,
-      lastSourcedSubreddit: 0,
-    },
-    {
-      id: 5,
-      nickname: "Fandom Friday",
-      description:
-        "Fantasy art from some cool established universes (Warcraft, Middle Earth, Elder Scrolls and The Witcher), on a rotating schedule.",
-      subredditDisplayNames:
-        "ImaginaryAzeroth, ImaginaryMiddleEarth, ImaginaryTamriel, ImaginaryWitcher",
-      isCyclicalRotation: true,
-      lastSourcedSubreddit: 0,
-    },
-    {
-      id: 6,
-      nickname: "Scenic Saturday",
-      description:
-        "Art of beautiful places, from majestic landscapes to towering castles.",
-      subredditDisplayNames:
-        "ImaginaryArchitecture, ImaginaryCastles, ImaginaryDwellings, ImaginaryPathways, ImaginarySeascapes, ImaginaryWildlands, ImaginaryWorlds",
-      isCyclicalRotation: false,
-      lastSourcedSubreddit: 0,
-    },
-  ];
-
-  await Promise.all(
-    postingScheduleDays.map(async (postingScheduleDay) => {
-      await prisma.postingScheduleDay.create({ data: postingScheduleDay });
-    })
-  );
-};
 
 /**
  * Fills the `QueuedInstagramPost` table with initial data.
@@ -136,6 +51,138 @@ const initQueuedInstagramPosts = async () => {
       console.log();
     }
   }
+};
+
+/**
+ * Fills the `PostingScheduleDay` table with initial data. Reflects the information in the README
+ * concerning the posting schedule.
+ */
+const initPostingScheduleDays = async () => {
+  const postingScheduleDays: PostingScheduleDay[] = [
+    {
+      id: 0,
+      nickname: "Seasonal Sunday",
+      description:
+        "Art depicting one of the four seasons, on a rotating basis.",
+      subredditDisplayNames: [
+        "ImaginaryWinterscapes",
+        "ImaginarySpringscapes",
+        "ImaginarySummerscapes",
+        "ImaginaryAutumnscapes",
+      ],
+      isCyclicalRotation: true,
+      lastSourcedSubreddit: 0,
+    },
+    {
+      id: 1,
+      nickname: "Magic Monday",
+      description:
+        "Art with magical and high-fantasy themes: wizards, witches, elves, dragons and such.",
+      subredditDisplayNames: [
+        "ImaginaryWitches",
+        "ImaginaryWizards",
+        "ImaginaryDwarves",
+        "ImaginaryElves",
+        "ImaginaryDragons",
+      ],
+      isCyclicalRotation: false,
+      lastSourcedSubreddit: 0,
+    },
+    {
+      id: 2,
+      nickname: "Techno Tueday",
+      description: "Artistic works with steampunk and cyberpunk themes.",
+      subredditDisplayNames: [
+        "ImaginaryCybernetics",
+        "ImaginaryCyberpunk",
+        "ImaginarySteampunk",
+        "ImaginaryMechs",
+        "ImaginaryStarships",
+      ],
+      isCyclicalRotation: false,
+      lastSourcedSubreddit: 0,
+    },
+    {
+      id: 3,
+      nickname: "Warrior Wednesday",
+      description:
+        "Art of all kinds of fantasy warriors, from sneaky assassins to battered brawlers.",
+      subredditDisplayNames: [
+        "ImaginaryBattlefields",
+        "ImaginaryArchers",
+        "ImaginaryAssassins",
+        "ImaginaryKnights",
+        "ImaginarySoldiers",
+        "ImaginaryWarriors",
+      ],
+      isCyclicalRotation: false,
+      lastSourcedSubreddit: 0,
+    },
+    {
+      id: 4,
+      nickname: "Alliteration-Is-Hard Thursday",
+      description:
+        'I couldn\'t think of a good "th"-word, so today we just have some random themes: angels, demons, scholars, merfolk and more.',
+      subredditDisplayNames: [
+        "ImaginaryAngels",
+        "ImaginaryOrcs",
+        "ImaginaryScholars",
+        "ImaginaryMythology",
+        "ImaginaryNobles",
+        "ImaginaryElementals",
+        "ImaginaryUndead",
+        "ImaginaryDemons",
+        "ImaginaryFaeries",
+        "ImaginaryMerfolk",
+        "ImaginaryHumans",
+      ],
+      isCyclicalRotation: false,
+      lastSourcedSubreddit: 0,
+    },
+    {
+      id: 5,
+      nickname: "Fandom Friday",
+      description:
+        "Fantasy art from some cool established universes (Warcraft, Middle Earth, Elder Scrolls and The Witcher), on a rotating schedule.",
+      subredditDisplayNames: [
+        "ImaginaryAzeroth",
+        "ImaginaryMiddleEarth",
+        "ImaginaryTamriel",
+        "ImaginaryWitcher",
+      ],
+      isCyclicalRotation: true,
+      lastSourcedSubreddit: 0,
+    },
+    {
+      id: 6,
+      nickname: "Scenic Saturday",
+      description:
+        "Art of beautiful places, from majestic landscapes to towering castles.",
+      subredditDisplayNames: [
+        "ImaginaryArchitecture",
+        "ImaginaryCastles",
+        "ImaginaryDwellings",
+        "ImaginaryPathways",
+        "ImaginarySeascapes",
+        "ImaginaryWildlands",
+        "ImaginaryWorlds",
+      ],
+      isCyclicalRotation: false,
+      lastSourcedSubreddit: 0,
+    },
+  ];
+
+  await Promise.all(
+    postingScheduleDays.map(async (postingScheduleDay) => {
+      await prisma.postingScheduleDay.create({ data: postingScheduleDay });
+    })
+  );
+};
+
+const initPersistedValueRecord = async () => {
+  await prisma.persistedValuesRecord.create({
+    data: { postingTimeForToday: 6, hasPostingTimeBeenUpdatedToday: true },
+  });
 };
 
 //#endregion

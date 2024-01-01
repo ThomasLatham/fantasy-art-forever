@@ -15,6 +15,7 @@
   "dependencies": {
     "@prisma/client": "^5.7.1",
     "instagram-private-api": "^1.45.3",
+    "luxon": "^3.4.4",
     "next": "14.0.4",
     "raw-loader": "^4.0.2",
     "re2": "^1.20.9",
@@ -24,6 +25,7 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "@types/luxon": "^3.3.7",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
