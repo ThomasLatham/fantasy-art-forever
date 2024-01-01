@@ -36,10 +36,11 @@ const ig = await (async () => {
  * string otherwise.
  */
 const createInstagramPost = async (postDetails: QueuedInstagramPost) => {
-  const imageBuffer = await get({
-    url: (await snoo.getSubmission(postDetails.redditPostId)).url,
-    encoding: null, // this is required, only this way a Buffer is returned
-  });
+  const imageBuffer = Buffer.from(
+    await (
+      await fetch((await snoo.getSubmission(postDetails.redditPostId)).url)
+    ).arrayBuffer()
+  );
 
   const publishResult = await ig.publish.photo({
     file: imageBuffer,
@@ -60,17 +61,17 @@ const getCaptionFromPostDetails = async (postDetails: QueuedInstagramPost) => {
 
   // returns it in an object so we more easily see the formatting here
   return `${postDetails.artworkTitle} by ${postDetails.artistName}
-      Source: ${postDetails.linkToArtworkSource}
-      Reddit Post: ${getPostUrlFromSubmission(
-        await snoo.getSubmission(postDetails.redditPostId)
-      )}
-      Reddit OP: u/${postDetails.redditOP}
+Source: ${postDetails.linkToArtworkSource}
+Reddit Post: ${getPostUrlFromSubmission(
+    await snoo.getSubmission(postDetails.redditPostId)
+  )}
+Reddit OP: u/${postDetails.redditOP}
       
-      ${postingScheduleDay.nickname}: ${postingScheduleDay.description}
+${postingScheduleDay.nickname}: ${postingScheduleDay.description}
 
-      #fantasy #art #${postDetails.subredditDisplayName
-        .split("Imaginary")[1]
-        .toLowerCase()}`;
+#fantasy #art #${postDetails.subredditDisplayName
+    .split("Imaginary")[1]
+    .toLowerCase()}`;
 };
 
 export { createInstagramPost };

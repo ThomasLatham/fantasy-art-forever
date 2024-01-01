@@ -6,10 +6,9 @@ import * as fs from "fs";
 import snoo from "../src/utils/reddit";
 import "../snoowrapFix";
 import prisma, {
+  fillQueue,
   getAllSubredditDisplayNames,
-  pushToQueue,
 } from "../src/utils/database";
-import { getINEPostInfo, getPostUrlFromSubmission } from "../src/utils/reddit";
 
 /**
  * Put your database operations that you want to execute in this function.
@@ -33,25 +32,7 @@ const describeDatabaseOperations = async () => {
  * we'll initialize the data using the top 3 posts of all time for each subreddit.
  */
 const initQueuedInstagramPosts = async () => {
-  for (const subredditDisplayName of await getAllSubredditDisplayNames()) {
-    const posts = await snoo
-      .getSubreddit(subredditDisplayName)
-      .getTop({ time: "all", limit: 10 });
-    for (const post of posts) {
-      try {
-        console.log(
-          "Attempting to insert " +
-            getPostUrlFromSubmission(post) +
-            " into DB..."
-        );
-        await pushToQueue(await getINEPostInfo(post));
-        console.log("Attempt success.");
-      } catch (error) {
-        console.log("Error: " + (error as any).message);
-      }
-      console.log();
-    }
-  }
+  await fillQueue("all", 10);
 };
 
 /**

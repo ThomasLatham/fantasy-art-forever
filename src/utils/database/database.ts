@@ -3,8 +3,10 @@ import {
   PrismaClient,
   QueuedInstagramPost,
 } from "@prisma/client";
+import { Timespan } from "snoowrap/dist/objects/Subreddit";
 
 import { INEPostInfo, POSTS_PER_SUBREDDIT } from "../../constants";
+import snoo, { getINEPostInfo, getPostUrlFromSubmission } from "../reddit";
 
 //#region PRISMA SINGLETON
 
@@ -19,6 +21,74 @@ const prisma = globalThis.prisma ?? prismaClientSingleton();
 //#endregion
 
 //#region CREATE
+
+/**
+ * Fills the queue with top posts from subreddits if space is available.
+ *
+ * @param timespanOfTopPostsToSource - The timespan for sourcing top posts.
+ * @param numberOfTopPostsToSource - The number of top posts to source.
+ * @returns A response indicating the action taken and its status.
+ */
+const fillQueue = async (
+  timespanOfTopPostsToSource: Timespan,
+  numberOfTopPostsToSource: number
+) => {
+  let hasPostBeenQueued: boolean = false;
+  try {
+    for (const subredditDisplayName of await getAllSubredditDisplayNames()) {
+      let queueItemsForSubredditCount = await getQueueItemsBySubredditCount(
+        subredditDisplayName
+      );
+      if (queueItemsForSubredditCount >= POSTS_PER_SUBREDDIT) {
+        console.log(
+          "Queue already full for subreddit: " + subredditDisplayName
+        );
+        continue;
+      }
+      const topPostsToSource = await snoo
+        .getSubreddit(subredditDisplayName)
+        .getTop({ time: "week", limit: 6 });
+      let lastIndexTried = 0;
+
+      while (queueItemsForSubredditCount < POSTS_PER_SUBREDDIT) {
+        try {
+          console.log(
+            "Attempting to insert " +
+              getPostUrlFromSubmission(topPostsToSource[lastIndexTried]) +
+              " into DB..."
+          );
+          await pushToQueue(
+            await getINEPostInfo(topPostsToSource[lastIndexTried])
+          );
+          queueItemsForSubredditCount++;
+          hasPostBeenQueued = true;
+          console.log("Attempt success.");
+        } catch (error) {
+          console.log("Error: " + (error as any).message);
+        } finally {
+          lastIndexTried++;
+          console.log();
+        }
+      }
+    }
+  } catch (error) {
+    console.log("Something went wrong. Error: " + (error as any).message);
+    return new Response(
+      "Something went wrong. Error: " + (error as any).message,
+      {
+        status: 500,
+      }
+    );
+  }
+  return new Response(
+    hasPostBeenQueued
+      ? "Created: New post(s) queued up."
+      : "Accepted: No action taken, as queue is already full.",
+    {
+      status: hasPostBeenQueued ? 201 : 202,
+    }
+  );
+};
 
 /**
  * Pushes the details of a Reddit post to the Instagram-post queue.
@@ -183,6 +253,8 @@ const queueUpBackupItem = async (queueItemId: string) => {
 //#endregion
 
 export {
+  fillQueue,
+  pushToQueue,
   getAllSubredditDisplayNames,
   getQueueItemsBySubreddit,
   getQueueItemsBySubredditSorted,
@@ -190,7 +262,6 @@ export {
   getQueueItemsBySubredditCount,
   getSubredditForToday,
   getPostingScheduleDayBySubreddit,
-  pushToQueue,
 };
 export default prisma;
 

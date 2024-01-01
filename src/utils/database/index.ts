@@ -1,20 +1,22 @@
 import prisma, {
+  fillQueue,
+  pushToQueue,
   getAllSubredditDisplayNames,
   getQueueItemsBySubreddit,
   getQueueItemsBySubredditSorted,
   getQueueItemsBySubredditCount,
   getSubredditForToday,
-  pushToQueue,
   getPostingScheduleDayBySubreddit,
 } from "./database";
 
 export {
+  fillQueue,
+  pushToQueue,
   getAllSubredditDisplayNames,
   getQueueItemsBySubreddit,
   getQueueItemsBySubredditSorted,
   getQueueItemsBySubredditCount,
   getSubredditForToday,
   getPostingScheduleDayBySubreddit,
-  pushToQueue,
 };
 export default prisma;

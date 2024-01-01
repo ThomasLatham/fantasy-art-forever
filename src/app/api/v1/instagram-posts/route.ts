@@ -201,16 +201,32 @@ const POST = async (request: NextRequest) => {
     }
   }
 
-  // remove from the queue any of the posts that failed
-  if (idsOfFailedPosts.length) {
-    await prisma.queuedInstagramPost.deleteMany({
-      where: {
-        OR: idsOfFailedPosts.map((idOfFailedPost) => {
-          return { id: idOfFailedPost };
-        }),
-      },
-    });
+  //#region DEQUEUE
+
+  // remove from the queue any successful or failed posts
+  const queueItemsToRemove = [];
+  queueItemsToRemove.push(...idsOfFailedPosts);
+  if (successfulRedditPostId) {
+    queueItemsToRemove.push(successfulRedditPostId);
   }
+  await prisma.queuedInstagramPost.deleteMany({
+    where: {
+      OR: queueItemsToRemove.map((idOfFailedPost) => {
+        return { id: idOfFailedPost };
+      }),
+    },
+  });
+  if (successfulRedditPostId || queueItemsToRemove.length) {
+    console.log(
+      "Removed the following posts from queue:" + successfulRedditPostId
+        ? "\nSuccessful Upload: " + successfulRedditPostId
+        : "" + queueItemsToRemove.length
+        ? "\nFailed Upload: " + queueItemsToRemove.join(", ")
+        : ""
+    );
+  }
+
+  //#endregion
 
   // if all the posts failed then send a 500 response
   if (!instagramUploadId) {
