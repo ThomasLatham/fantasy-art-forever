@@ -221,7 +221,11 @@ const getINEPostImageLink = async () => {
   const queuedPost = await prisma.queuedInstagramPost.findFirst();
 
   // log the URL
-  console.log(await snoo.getSubmission(queuedPost.redditPostId).url);
+  console.log(
+    queuedPost
+      ? await snoo.getSubmission(queuedPost.redditPostId).url
+      : "No posts found in queue to test."
+  );
 };
 
 //#endregion
