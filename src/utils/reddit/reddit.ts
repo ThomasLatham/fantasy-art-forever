@@ -110,10 +110,12 @@ const getINEPostInfo = async (
       throw new Error("No comments with a valid source link found.");
     }
 
-    linkToArtworkSource = linkToArtworkSource.split('">')[0];
+    linkToArtworkSource = removeQueryStringFromImageName(
+      linkToArtworkSource.split('">')[0]
+    );
 
     // Make sure image URL exists and it's a JPEG
-    if (!(submission.url && isJpegImage(submission.url))) {
+    if (!(submission.url && (await isJpegImage(submission.url)))) {
       throw new Error(
         "Artwork image URL does not exist, or the image could not be retrieved from the URL, or image is not a JPEG."
       );
@@ -137,6 +139,35 @@ const getINEPostInfo = async (
       `Error fetching post information: ${(error as any).message}`
     );
   }
+};
+
+/**
+ * Removes query strings from image names with ".jpg" or ".jpeg" extensions.
+ * @param imageName The image name possibly containing a query string.
+ * @returns The modified image name without the query string.
+ */
+const removeQueryStringFromImageName = (imageName: string): string => {
+  const jpgIndex = imageName.indexOf(".jpg");
+  const jpegIndex = imageName.indexOf(".jpeg");
+  let extensionIndex = -1;
+
+  if (jpgIndex !== -1) {
+    extensionIndex = jpgIndex;
+  } else if (jpegIndex !== -1) {
+    extensionIndex = jpegIndex;
+  }
+
+  if (extensionIndex !== -1) {
+    const queryStringIndex = imageName.indexOf("?", extensionIndex);
+    if (queryStringIndex !== -1) {
+      return (
+        imageName.substring(0, queryStringIndex) +
+        imageName.substring(extensionIndex)
+      );
+    }
+  }
+
+  return imageName;
 };
 
 const isPostOC = (postLinkFlairText: string | null, artistName: string) => {

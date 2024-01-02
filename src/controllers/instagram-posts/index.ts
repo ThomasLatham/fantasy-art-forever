@@ -4,10 +4,10 @@ import { Request, Response } from "express";
 import prisma, {
   getQueueItemsBySubredditSorted,
   getSubredditForToday,
-} from "@/utils/database";
-import { POSTING_TIMES } from "@/constants";
-import { now } from "@/utils/general";
-import { createInstagramPost } from "@/utils/instagram";
+} from "../../utils/database";
+import { POSTING_TIMES } from "../../constants";
+import { now } from "../../utils/general";
+import { createInstagramPost } from "../../utils/instagram";
 
 /**
  * This script is designed to run every day 3 times before the earliest posting time and three times
@@ -37,7 +37,8 @@ const setPostingTime = async (request: Request, response: Response) => {
       await prisma.persistedValuesRecord.updateMany({
         where: {},
         data: {
-          postingTimeForToday: Math.floor(Math.random() * POSTING_TIMES.length),
+          postingTimeForToday:
+            POSTING_TIMES[Math.floor(Math.random() * POSTING_TIMES.length)],
           hasPostingTimeBeenUpdatedToday: true,
         },
       });
@@ -62,7 +63,8 @@ const setPostingTime = async (request: Request, response: Response) => {
       });
     } catch (error) {
       return response.status(500).json({
-        message: "Internal Server Error: Could not set posting time for today.",
+        message:
+          "Internal Server Error: Could not reset set-posting-time flag.",
       });
     }
   } else {
@@ -76,6 +78,9 @@ const setPostingTime = async (request: Request, response: Response) => {
 /**
  * The script for posting to Instagram. Only posts once a day, but gets called throughout the day to
  * account for randomized posting times and the chance of failure.
+ *
+ * Secondarily, the endpoint resets the `hasPostBeenMadeToday` flag to false if the time of calling
+ * is less than the earliest possible posting time.
  *
  * @param request The request from the cronjob service.
  * @returns An HTTP response according to the success state of the request.
@@ -112,6 +117,9 @@ const postToInstagram = async (request: Request, response: Response) => {
       data: { hasPostBeenMadeToday: false },
     });
     console.log("Flag `hasPostBeenMadeToday` set to `false`.");
+    return response.status(200).json({
+      message: "OK: Flag `hasPostBeenMadeToday` set to `false`.",
+    });
   }
 
   // make sure we handle the request only after posting time and if a post hasn't already been made
@@ -122,7 +130,8 @@ const postToInstagram = async (request: Request, response: Response) => {
   ) {
     return response.status(202).json({
       message:
-        "Accepted: No action taken, as it is not yet posting time, or a post has already been made today.",
+        "Accepted: No action taken, as it is not yet posting time, or a post has already been made today. Today's posting time: " +
+        persistedValuesRecord.postingTimeForToday,
     });
   }
 

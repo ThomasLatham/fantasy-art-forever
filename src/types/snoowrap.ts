@@ -6,6 +6,7 @@
 import * as snoowrap from "snoowrap";
 
 declare module "snoowrap" {
+  // @ts-ignore
   class RedditContent<T> {
     then: undefined;
     catch: undefined;

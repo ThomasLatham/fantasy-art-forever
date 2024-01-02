@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { fillQueue } from "@/utils/database";
+import { fillQueue } from "../../utils/database";
 
 /**
  * This script is designed to run every 6 hours (4 times a day). For each subreddit we source,

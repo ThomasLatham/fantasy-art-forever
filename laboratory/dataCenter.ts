@@ -1,14 +1,12 @@
-//#region IMPORTS
 import { PostingScheduleDay } from "@prisma/client";
 import * as fs from "fs";
 
 import snoo from "../src/utils/reddit";
-import "../snoowrapFix";
+import "../src/types/snoowrap";
 import prisma, {
   fillQueue,
   getAllSubredditDisplayNames,
 } from "../src/utils/database";
-//#endregion
 
 /**
  * Put your database operations that you want to execute in this function.
@@ -21,6 +19,8 @@ const describeDatabaseOperations = async () => {
   // await initQueuedInstagramPosts();
   // await prisma.persistedValuesRecord.deleteMany();
   // await initPersistedValueRecord();
+  const submission = await snoo.getSubmission("eok1en").fetch();
+  console.log(submission.id);
 };
 
 //#region TABLE INITIALIZERS

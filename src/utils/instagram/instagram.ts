@@ -21,7 +21,8 @@ const instagramSingleton = async () => {
 declare global {
   var ig: undefined | ReturnType<typeof instagramSingleton>;
 }
-const ig = await (async () => {
+
+const ig = (async () => {
   return globalThis.ig ?? (await instagramSingleton());
 })();
 
@@ -39,7 +40,9 @@ const createInstagramPost = async (postDetails: QueuedInstagramPost) => {
     await (await fetch(postDetails.artworkImageUrl)).arrayBuffer()
   );
 
-  const publishResult = await ig.publish.photo({
+  const publishResult = await (
+    await ig
+  ).publish.photo({
     file: imageBuffer,
     caption: await getCaptionFromPostDetails(postDetails),
   });
@@ -60,6 +63,7 @@ const getCaptionFromPostDetails = async (postDetails: QueuedInstagramPost) => {
   return `${postDetails.artworkTitle} by ${postDetails.artistName}
 Source: ${postDetails.linkToArtworkSource}
 Reddit Post: ${getPostUrlFromSubmission(
+    // @ts-ignore
     await snoo.getSubmission(postDetails.redditPostId).fetch()
   )}
 Reddit OP: u/${postDetails.redditOP}
