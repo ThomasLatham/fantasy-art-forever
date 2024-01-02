@@ -5,6 +5,7 @@ import {
 } from "@prisma/client";
 import { Timespan } from "snoowrap/dist/objects/Subreddit";
 import { time } from "console";
+import { Response } from "express";
 
 import { INEPostInfo, POSTS_PER_SUBREDDIT } from "../../constants";
 import snoo, { getINEPostInfo, getPostUrlFromSubmission } from "../reddit";
@@ -77,21 +78,17 @@ const fillQueue = async (
     }
   } catch (error) {
     console.log("Something went wrong. Error: " + (error as any).message);
-    return new Response(
-      "Something went wrong. Error: " + (error as any).message,
-      {
-        status: 500,
-      }
-    );
+    return {
+      status: 500,
+      message: "Something went wrong. Error: " + (error as any).message,
+    };
   }
-  return new Response(
-    hasPostBeenQueued
+  return {
+    status: hasPostBeenQueued ? 201 : 202,
+    message: hasPostBeenQueued
       ? "Created: New post(s) queued up."
       : "Accepted: No action taken, as queue is already full.",
-    {
-      status: hasPostBeenQueued ? 201 : 202,
-    }
-  );
+  };
 };
 
 /**

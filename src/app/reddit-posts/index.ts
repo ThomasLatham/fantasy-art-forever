@@ -1,4 +1,4 @@
-import type { NextRequest } from "next/server";
+import { Request, Response } from "express";
 
 import { fillQueue } from "@/utils/database";
 
@@ -10,15 +10,16 @@ import { fillQueue } from "@/utils/database";
  * @param request The request from the cronjob service.
  * @returns An HTTP response according to the success state of the request.
  */
-const POST = async (request: NextRequest) => {
-  const authHeader = request.headers.get("authorization");
+const refillQueue = async (request: Request, response: Response) => {
+  const authHeader = request.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
+    return response.status(401).json({ message: "Unauthorized" });
   }
+  const fillQueueResult = await fillQueue("week", 6);
 
-  return await fillQueue("week", 6);
+  return response
+    .status(fillQueueResult.status)
+    .json({ message: fillQueueResult.message });
 };
 
-export { POST };
+export { refillQueue };

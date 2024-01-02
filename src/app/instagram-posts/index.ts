@@ -1,5 +1,5 @@
-import type { NextRequest } from "next/server";
 import { PersistedValuesRecord } from "@prisma/client";
+import { Request, Response } from "express";
 
 import prisma, {
   getQueueItemsBySubredditSorted,
@@ -18,12 +18,10 @@ import { createInstagramPost } from "@/utils/instagram";
  * @param request The request from the cronjob service.
  * @returns An HTTP response according to the success state of the request.
  */
-const PUT = async (request: NextRequest) => {
-  const authHeader = request.headers.get("authorization");
+const setPostingTime = async (request: Request, response: Response) => {
+  const authHeader = request.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   if (now().hour < POSTING_TIMES[0]) {
@@ -32,12 +30,9 @@ const PUT = async (request: NextRequest) => {
         (await prisma.persistedValuesRecord.findFirst({ where: {} }))!
           .hasPostingTimeBeenUpdatedToday
       ) {
-        return new Response(
-          "Accepted: Posting time has already been updated today.",
-          {
-            status: 202,
-          }
-        );
+        return response.status(202).json({
+          message: "Accepted: Posting time has already been updated today.",
+        });
       }
       await prisma.persistedValuesRecord.updateMany({
         where: {},
@@ -46,16 +41,13 @@ const PUT = async (request: NextRequest) => {
           hasPostingTimeBeenUpdatedToday: true,
         },
       });
-      return new Response("Success", {
-        status: 200,
+      return response.status(200).json({
+        message: "Success",
       });
     } catch (error) {
-      return new Response(
-        "Internal Server Error: Could not set posting time for today.",
-        {
-          status: 500,
-        }
-      );
+      return response.status(500).json({
+        message: "Internal Server Error: Could not set posting time for today.",
+      });
     }
   } else if (now().hour > POSTING_TIMES[POSTING_TIMES.length - 1]) {
     try {
@@ -65,24 +57,19 @@ const PUT = async (request: NextRequest) => {
           hasPostingTimeBeenUpdatedToday: false,
         },
       });
-      return new Response("Success", {
-        status: 200,
+      return response.status(200).json({
+        message: "Success",
       });
     } catch (error) {
-      return new Response(
-        "Internal Server Error: Could not set posting time for today.",
-        {
-          status: 500,
-        }
-      );
+      return response.status(500).json({
+        message: "Internal Server Error: Could not set posting time for today.",
+      });
     }
   } else {
-    return new Response(
-      "Bad Request: Endpoint does not take requests at this time of day.",
-      {
-        status: 400,
-      }
-    );
+    return response.status(400).json({
+      message:
+        "Bad Request: Endpoint does not take requests at this time of day.",
+    });
   }
 };
 
@@ -93,12 +80,10 @@ const PUT = async (request: NextRequest) => {
  * @param request The request from the cronjob service.
  * @returns An HTTP response according to the success state of the request.
  */
-const POST = async (request: NextRequest) => {
-  const authHeader = request.headers.get("authorization");
+const postToInstagram = async (request: Request, response: Response) => {
+  const authHeader = request.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
+    return response.status(401).json({ message: "Unauthorized" });
   }
 
   let persistedValuesRecord: PersistedValuesRecord | null;
@@ -110,20 +95,14 @@ const POST = async (request: NextRequest) => {
       where: {},
     });
     if (!persistedValuesRecord) {
-      return new Response(
-        "Internal Server Error: Could not get today's posting time.",
-        {
-          status: 500,
-        }
-      );
+      return response.status(500).json({
+        message: "Internal Server Error: Could not get today's posting time.",
+      });
     }
   } catch (error) {
-    return new Response(
-      "Internal Server Error: Could not get today's posting time.",
-      {
-        status: 500,
-      }
-    );
+    return response.status(500).json({
+      message: "Internal Server Error: Could not get today's posting time.",
+    });
   }
 
   // reset the posting flag if it's a new day and before the first posting time
@@ -141,12 +120,10 @@ const POST = async (request: NextRequest) => {
     now().hour < persistedValuesRecord.postingTimeForToday ||
     persistedValuesRecord.hasPostBeenMadeToday
   ) {
-    return new Response(
-      "Accepted: No action taken, as it is not yet posting time, or a post has already been made today.",
-      {
-        status: 202,
-      }
-    );
+    return response.status(202).json({
+      message:
+        "Accepted: No action taken, as it is not yet posting time, or a post has already been made today.",
+    });
   }
 
   //#endregion
@@ -158,12 +135,9 @@ const POST = async (request: NextRequest) => {
     });
 
   if (!postingScheduleDetailsForToday) {
-    return new Response(
-      "Internal Server Error: Could not get posting schedule details.",
-      {
-        status: 500,
-      }
-    );
+    return response.status(500).json({
+      message: "Internal Server Error: Could not get posting schedule details.",
+    });
   }
 
   // get the next subreddit from which to source
@@ -239,12 +213,9 @@ const POST = async (request: NextRequest) => {
   // if all the posts failed then send a 500 response
   if (!instagramUploadId) {
     console.log("Failed to upload to Instagram.");
-    return new Response(
-      "Internal Server Error: Failed to upload to Instagram.",
-      {
-        status: 500,
-      }
-    );
+    return response.status(500).json({
+      message: "Internal Server Error: Failed to upload to Instagram.",
+    });
   }
 
   // everything after is if it was successful
@@ -269,23 +240,19 @@ const POST = async (request: NextRequest) => {
       },
     });
     console.log("Creation record created in database.");
-    return new Response(
-      "Created: Instagram post created successfully, and creation record created in database.",
-      {
-        status: 201,
-      }
-    );
+    return response.status(201).json({
+      message:
+        "Created: Instagram post created successfully, and creation record created in database.",
+    });
   } catch (error) {
     console.log("Creation record failed to be created in database.");
-    return new Response(
-      "Multi-Status: Instagram post created successfully, but creation record failed to be created in database.",
-      {
-        status: 207,
-      }
-    );
+    return response.status(207).json({
+      message:
+        "Multi-Status: Instagram post created successfully, but creation record failed to be created in database.",
+    });
   }
 
   //#endregion
 };
 
-export { PUT, POST };
+export { setPostingTime, postToInstagram };

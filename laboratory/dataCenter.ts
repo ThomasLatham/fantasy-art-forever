@@ -1,6 +1,4 @@
 //#region IMPORTS
-import dotenv from "dotenv";
-dotenv.config({ path: "./.env.local" });
 import { PostingScheduleDay } from "@prisma/client";
 import * as fs from "fs";
 
