@@ -127,11 +127,10 @@ The time of day Instagram posts are made is randomized between 5 different times
 3 pm and 6 pm (all Eastern Time).
 
 ### Technologies Used
-The bot is a [Next.js](https://nextjs.org/) application hosted on [Vercel](https://vercel.com/home).
-You might be thinking, "[~~But isn't Betty a woman's name?~~](https://www.youtube.com/watch?v=pz1rjq5emKY&ab_channel=Dude902) But isn't Next.js a
-frontend framework?" The answer to that is "Yes;" however, Next.js offers a very convenient (and
-free) way to define public API endpoints, and we can store the business logic of the application in
-such endpoints.
+The bot is an [Express](https://expressjs.com/) application hosted on [Render](https://render.com/).
+Express offers a very convenient and flexible way to define API endpoints, where the
+business logic of the application is stored. Render gives us a free way to host the application on
+the web.
 
 Having one endpoint for the logic of sourcing Reddit posts and another for the logic of posting to
 Instagram, we then use the cron-scheduling service [cron-job.org](https://cron-job.org/en/) (also
