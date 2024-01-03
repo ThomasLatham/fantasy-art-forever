@@ -42,7 +42,7 @@ model SubmittedInstagramPost {
 /// A day in the posting schedule. There are seven `PostingScheduleDay`s, one for each day of the
 /// week.
 model PostingScheduleDay {
-  id          Int    @unique /// Corresponds to the weekday index: Sunday is 0, Monday is 1, etc.
+  id          Int    @id /// Corresponds to the weekday index: Sunday is 0, Monday is 1, etc.
   nickname    String /// The nickname for the posting day (e.g., "Magic Monday" or "Techno Tuesday").
   description String /// The description of the theme for the posting day.
 

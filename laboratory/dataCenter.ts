@@ -19,8 +19,6 @@ const describeDatabaseOperations = async () => {
   // await initQueuedInstagramPosts();
   // await prisma.persistedValuesRecord.deleteMany();
   // await initPersistedValueRecord();
-  const submission = await snoo.getSubmission("eok1en").fetch();
-  console.log(submission.id);
 };
 
 //#region TABLE INITIALIZERS

@@ -240,6 +240,16 @@ const postToInstagram = async (request: Request, response: Response) => {
 
   console.log("Flag `hasPostBeenMadeToday` set to `true`.");
 
+  // set last-sourced-subreddit value in the posting-schedule table
+  await prisma.postingScheduleDay.update({
+    where: { id: postingScheduleDetailsForToday.id },
+    data: { lastSourcedSubreddit: indexOfSubredditForToday },
+  });
+
+  console.log(
+    `Value of \`lastSourcedSubreddit\` updated for posting-schedule day: ${postingScheduleDetailsForToday.nickname}.`
+  );
+
   // try to create the creation record; respond to the request accordingly
   try {
     await prisma.submittedInstagramPost.create({
