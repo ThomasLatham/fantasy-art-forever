@@ -13,6 +13,16 @@ app.post("/reddit-posts", refillQueue);
 app.put("/posting-times", setPostingTime);
 app.post("/instagram-posts", postToInstagram);
 
+// Spin up the server on Render
+app.get("/server", (request, response) => {
+  const authHeader = request.headers.authorization;
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return response.status(401).json({ message: "Unauthorized" });
+  }
+
+  return response.status(200).json({ message: "OK: Server spun up." });
+});
+
 // Catch all handler for all other request.
 app.use("*", (request, response) => {
   return response
