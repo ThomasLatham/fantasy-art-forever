@@ -177,7 +177,7 @@ const postToInstagram = async (request: Request, response: Response) => {
             queueItemToTry.redditPostId +
             "."
         );
-        idsOfFailedPosts.push(queueItemToTry.id);
+        idsOfFailedPosts.push(queueItemToTry.redditPostId);
       }
     } catch (error) {
       console.log(
@@ -186,7 +186,7 @@ const postToInstagram = async (request: Request, response: Response) => {
           ". Error: " +
           (error as any).message
       );
-      idsOfFailedPosts.push(queueItemToTry.id);
+      idsOfFailedPosts.push(queueItemToTry.redditPostId);
     }
   }
 
